@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model KeyUser {
+  id                Int                @id @default(autoincrement())
+  keyName           String
+  userPubkey        String
+  signingConditions SigningCondition[]
+  logs              Log[]
+
+  @@unique([keyName, userPubkey], name: "unique_key_user")
+}
+
+model SigningCondition {
+  id Int @id @default(autoincrement())
+
+  method         String?
+  kind           Int?
+  content        String?
+  keyUserKeyName String?
+  allowed        Boolean?
+  KeyUser        KeyUser? @relation(fields: [keyUserId], references: [id])
+  keyUserId      Int?
+}
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  timestamp DateTime
+  type      String
+  method    String?
+  params    String?
+  KeyUser   KeyUser? @relation(fields: [keyUserId], references: [id])
+  keyUserId Int?
+}
