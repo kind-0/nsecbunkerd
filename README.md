@@ -1,15 +1,78 @@
-# nsecbunker
+# nsecbunkerd
 Daemon to remotely sign nostr events using keys.
 
-## Installation
+## Easy setup via docker
+
+To quickly install `nsecbunkerd` via Docker just run:
 
 ```
-npm i -g nsecbunker
+docker run -d --name nsecbunkerd pablof7z/nsecbunkerd start --admin <your-npub>
 ```
 
-## Usage
+nsecBunker will give you a connection string like:
 
-nsecbunker -
+```
+bunker://npub1tj2dmc4udvgafxxxxxxxrtgne8j8l6rgrnaykzc8sys9mzfcz@relay.nsecbunker.com
+```
+
+You can visit https://app.nsecbunker.com/ to administrate your nsecBunker remotely.
+
+## Hard setup:
+(If you installed via docker you don't need to do any of this, skip to the [Configure](#configure) section)
+
+```
+git clone <nsecbunkerd-repo>
+npm i
+npm run build
+npx prisma migrate deploy
+```
+
+## Configure
+
+### Easy: Remote configuration
+
+Using the connection string you saw before, you can go to https://app.nsecbunker.com and paste your connection string.
+
+Note that ONLY the npub that you designated as an administrator when launching nsecBunker is able to control your nsecBunker. Even if someone sees your connection string, without access to your administrator keys, there's nothing they can do.
+
+### Hard: manual configuration
+
+(If you are using remote configuration you don't need to do any of this)
+
+### Add your nsec to nsecBunker
+
+Here you'll give nsecBunker your nsec. It will ask you for a passphrase to encrypt it on-disk.
+The name is an internal name you'll use to refer to this keypair. Choose anything that is useful to you.
+
+```
+npm run nsecbunkerd -- add --name <your-key-name>
+```
+
+#### Example
+```
+$ npm run nsecbunkerd -- add --name "Uncomfortable family"
+
+nsecBunker uses a passphrase to encrypt your nsec when stored on-disk.
+Every time you restart it, you will need to type in this password.
+
+Enter a passphrase: <enter-your-passphrase-here>
+Enter the nsec for Uncomfortable family: <copy-your-nsec-here>
+nsecBunker generated an admin password for you:
+
+***************************
+
+You will need this to manage users of your keys.
+````
+
+## Start
+
+```
+$ npm run nsecbunkerd start
+```
+
+## Testing with `nsecbunker-client`
+
+
 
 # Authors
 
@@ -18,5 +81,5 @@ nsecbunker -
 
 # License
 
-CC BY-NC-ND 3.0
+CC BY-NC-ND 4.0
 Contact @pablof7z for licensing.

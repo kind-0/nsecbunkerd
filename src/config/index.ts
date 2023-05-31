@@ -1,21 +1,34 @@
-import { randomBytes } from 'crypto';
 import { readFileSync, writeFileSync } from 'fs';
+import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
+import { IAdminOpts } from '../daemon/admin';
 
-function getPassphrase(): string {
-    const passwordLength = 32;
-    const passwordBytes = randomBytes(passwordLength);
-    return passwordBytes.toString('base64').slice(0, passwordLength);
+const generatedKey = NDKPrivateKeySigner.generate();
+
+export interface IConfig {
+    nostr: {
+        relays: string[];
+    };
+    admin: IAdminOpts;
+    database: string;
+    logs: string;
+    keys: Record<string, any>;
+    verbose: boolean;
 }
 
-const defaultConfig = {
+const defaultConfig: IConfig = {
     nostr: {
         relays: [
             'wss://nos.lol',
             // 'wss://relay.damus.io'
         ]
     },
-    remote: {
-        passphrase: getPassphrase(),
+    admin: {
+        npubs: [],
+        adminRelays: [
+            "wss://nostr.vulpem.com",
+            "wss://relay.nsecbunker.com"
+        ],
+        key: generatedKey.privateKey!
     },
     database: 'sqlite://nsecbunker.db',
     logs: './nsecbunker.log',
@@ -23,17 +36,13 @@ const defaultConfig = {
     verbose: false,
 };
 
-export function getCurrentConfig(config: string) {
+async function getCurrentConfig(config: string): Promise<IConfig> {
     try {
         const configFileContents = readFileSync(config, 'utf8');
         return JSON.parse(configFileContents);
     } catch (err: any) {
         if (err.code === 'ENOENT') {
-            const d = defaultConfig;
-
-            console.log(`nsecBunker generated an admin password for you:\n\n${d.remote.passphrase}\n\n` +
-                        `You will need this to manage users of your keys.\n\n`);
-
+            await saveCurrentConfig(config, defaultConfig);
             return defaultConfig;
         } else {
             console.error(`Error reading config file: ${err.message}`);
@@ -51,3 +60,5 @@ export function saveCurrentConfig(config: string, currentConfig: any) {
         process.exit(1); // Kill the process if there is an error parsing the JSON
     }
 }
+
+export {getCurrentConfig};

@@ -1,6 +1,11 @@
 import run from './run';
-import type {IOpts} from './run';
+import type {IConfig} from '../config/index';
 
-process.on('message', (configData: IOpts) => {
-    run(configData);
+export type DaemonConfig = IConfig & {
+    configFile: string;
+    allKeys: Record<string, any>;
+};
+
+process.on('message', (config: DaemonConfig) => {
+    run(config);
 });

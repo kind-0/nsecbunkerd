@@ -1,37 +1,33 @@
-import NDK, { NDKEvent, NDKPrivateKeySigner, NDKNip46Signer, NostrEvent } from '@nostr-dev-kit/ndk';
+import NDK, { NDKUser, NDKEvent, NDKPrivateKeySigner, NDKNip46Signer, NostrEvent } from '@nostr-dev-kit/ndk';
 
-const remotePubkey = process.env.PUBKEY;
-
-if (!remotePubkey) {
-    console.log('Usage: PUBKEY=<pubkey> node src/client.js <content>');
-    process.exit(1);
-}
-
-const pubkey = process.argv[2];
+const remotePubkey = process.argv[2];
 const content = process.argv[3];
 
 if (!content) {
-    console.log('Usage: node src/client.js <remote-pubkey> <content>');
+    console.log('Usage: node src/client.js <remote-npub> <content>');
     console.log('');
-    console.log(`\t<remote-pubkey>:    npub that should be published as`);
+    console.log(`\t<remote-npub>:      npub that should be published as`);
     console.log(`\t<content>:          event JSON to sign | or kind:1 content string to sign`);
     process.exit(1);
 }
 
 async function createNDK(): Promise<NDK> {
     const ndk = new NDK({
-        explicitRelayUrls: ['wss://nos.lol'],
+        explicitRelayUrls: ['wss://nostr.vulpem.com', "wss://67aee52897df.ngrok.app"],
     });
-    await ndk.connect(2000);
-    ndk.pool.on('connect', () => console.log('✅ connected'));
+    ndk.pool.on('relay:connect', () => console.log('✅ connected'));
+    ndk.pool.on('relay:disconnect', () => console.log('❌ disconnected'));
+    await ndk.connect(5000);
 
     return ndk;
 }
 
 (async () => {
+    const remoteUser = new NDKUser({npub: remotePubkey});
     const ndk = await createNDK();
-    const localSigner = new NDKPrivateKeySigner('9ec8a4b2e1fac9eae616736f718f92ed30c57fc2fff36ef8139e27c31889e327');
-    const signer = new NDKNip46Signer(ndk, remotePubkey, localSigner);
+    const localSigner = NDKPrivateKeySigner.generate();
+    // const localSigner = new NDKPrivateKeySigner('b8baad35c387d7cf84d52e0958d9a02aff214393a85b0703de4146c7a3697bb3');
+    const signer = new NDKNip46Signer(ndk, remoteUser.hexpubkey(), localSigner);
     console.log(`local pubkey`, (await signer.user()).npub);
     console.log(`remote pubkey`, remotePubkey);
     ndk.signer = signer;
@@ -40,17 +36,17 @@ async function createNDK(): Promise<NDK> {
         await signer.blockUntilReady();
         console.log(`authorized to sign as`, remotePubkey);
 
-        const notPabloEvent = new NDKEvent(ndk, {
-            pubkey: remotePubkey,
+        const event = new NDKEvent(ndk, {
+            pubkey: remoteUser.hexpubkey(),
             kind: 1,
             content,
             tags: [
-                ['t', 'grownostr'],
+                ['client', 'nsecbunker-client']
             ],
         } as NostrEvent);
 
-        await notPabloEvent.sign();
-        console.log('resulting event', JSON.stringify(await notPabloEvent.toNostrEvent()));
-        // await notPabloEvent.publish();
+        await event.sign();
+        console.log('resulting event', JSON.stringify(await event.toNostrEvent()));
+        await event.publish();
     }, 2000);
 })();

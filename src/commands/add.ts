@@ -1,4 +1,4 @@
-import {nip19, getPublicKey} from 'nostr-tools';
+import {nip19} from 'nostr-tools';
 import readline from 'readline';
 import { getCurrentConfig, saveCurrentConfig } from '../config/index.js';
 import { encryptNsec } from '../config/keys.js';
@@ -8,9 +8,9 @@ interface IOpts {
     name: string;
 }
 
-function saveEncrypted(config: string, nsec: string, passphrase: string, name: string) {
+export async function saveEncrypted(config: string, nsec: string, passphrase: string, name: string) {
     const { iv, data } = encryptNsec(nsec, passphrase);
-    const currentConfig = getCurrentConfig(config);
+    const currentConfig = await getCurrentConfig(config);
 
     currentConfig.keys[name] = { iv, data };
 
@@ -35,8 +35,8 @@ export async function addNsec(opts: IOpts) {
             let decoded;
             try {
                 decoded = nip19.decode(nsec);
-                const hexpubkey = getPublicKey(decoded.data as string);
-                const npub = nip19.npubEncode(hexpubkey);
+                // const hexpubkey = getPublicKey(decoded.data as string);
+                // const npub = nip19.npubEncode(hexpubkey);
                 saveEncrypted(config, nsec, passphrase, name);
 
                 rl.close();

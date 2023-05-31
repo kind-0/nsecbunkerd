@@ -1,5 +1,5 @@
 import readline from 'readline';
-import { getCurrentConfig } from '../config/index.js';
+import { getCurrentConfig, saveCurrentConfig } from '../config/index.js';
 import { decryptNsec } from '../config/keys.js';
 import { fork } from 'child_process';
 import { resolve } from 'path';
@@ -8,10 +8,21 @@ interface IOpts {
     keys: string[];
     verbose: boolean;
     config: string;
+    adminNpubs: string[];
 }
 
+/**
+ * This command starts the nsecbunkerd process with an (optional)
+ * admin interface over websockets or redis.
+ */
 export async function start(opts: IOpts) {
-    const configData = getCurrentConfig(opts.config);
+    const configData = await getCurrentConfig(opts.config);
+
+    if (opts.adminNpubs) {
+        configData.admin.npubs = opts.adminNpubs;
+    }
+
+    await saveCurrentConfig(opts.config, configData);
 
     if (opts.verbose) {
         configData.verbose = opts.verbose;
@@ -19,11 +30,7 @@ export async function start(opts: IOpts) {
 
     const keys: Record<string, string> = {};
 
-    let keysToStart = opts.keys;
-
-    if (!keysToStart) {
-        keysToStart = Object.keys(configData.keys);
-    }
+    const keysToStart = opts.keys || [];
 
     for (const keyName of keysToStart) {
         const nsec = await startKey(keyName, configData.keys[keyName], opts.verbose);
@@ -33,19 +40,13 @@ export async function start(opts: IOpts) {
         }
     }
 
-    if (Object.keys(keys).length === 0) {
-        console.log(`No keys started.`);
-        process.exit(1);
-    }
-
-    console.log(`nsecBunker starting with keys:`, Object.keys(keys).join(', '));
-
-    configData.keys = keys;
-
     const daemonProcess = fork(resolve(__dirname, '../daemon/index.js'));
-    daemonProcess.send(configData);
-
-    // process.exit(0);
+    daemonProcess.send({
+        configFile: opts.config,
+        allKeys: configData.keys,
+        ...configData,
+        keys,
+    });
 }
 
 interface KeyData {

@@ -7,15 +7,19 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./nsecbunker.db"
 }
 
 model KeyUser {
   id                Int                @id @default(autoincrement())
   keyName           String
   userPubkey        String
+  description       String?
   signingConditions SigningCondition[]
   logs              Log[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @default(now()) @updatedAt
+  lastUsedAt DateTime?
 
   @@unique([keyName, userPubkey], name: "unique_key_user")
 }
@@ -24,7 +28,7 @@ model SigningCondition {
   id Int @id @default(autoincrement())
 
   method         String?
-  kind           Int?
+  kind           String?
   content        String?
   keyUserKeyName String?
   allowed        Boolean?
