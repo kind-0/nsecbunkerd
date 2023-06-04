@@ -1,14 +1,12 @@
-import NDK, { NDKEvent, NDKPrivateKeySigner, NDKRpcRequest, NDKRpcResponse, NDKUser } from '@nostr-dev-kit/ndk';
+import NDK, { NDKPrivateKeySigner, NDKRpcRequest, NDKRpcResponse, NDKUser } from '@nostr-dev-kit/ndk';
 import { NDKNostrRpc } from '@nostr-dev-kit/ndk';
 import { debug } from 'debug';
 import { Key, KeyUser } from '../run';
-import {
-    checkIfPubkeyAllowed,
-    allowAllRequestsFromKey,
-    rejectAllRequestsFromKey
-} from '../lib/acl/index.js';
+import { allowAllRequestsFromKey } from '../lib/acl/index.js';
 import prisma from '../../db';
 import createNewKey from './commands/create_new_key';
+import createNewPolicy from './commands/create_new_policy';
+import createNewToken from './commands/create_new_token';
 import unlockKey from './commands/unlock_key';
 
 export type IAdminOpts = {
@@ -89,18 +87,106 @@ class AdminInterface {
     private async handleRequest(req: NDKRpcRequest) {
         // await this.validateRequest(req);
 
-        switch (req.method) {
-            case 'get_keys': this.reqGetKeys(req); break;
-            case 'get_key_users': this.reqGetKeyUsers(req); break;
-            case 'create_new_key': createNewKey(this, req); break;
-            case 'unlock_key': unlockKey(this, req); break;
-            default:
-                console.log(`Unknown method ${req.method}`);
+        try {
+            switch (req.method) {
+                case 'get_keys': this.reqGetKeys(req); break;
+                case 'get_key_users': this.reqGetKeyUsers(req); break;
+                case 'get_key_tokens': this.reqGetKeyTokens(req); break;
+                case 'create_new_key': createNewKey(this, req); break;
+                case 'unlock_key': unlockKey(this, req); break;
+                case 'create_new_policy': createNewPolicy(this, req); break;
+                case 'get_policies': this.reqListPolicies(req); break;
+
+                case 'create_new_token': createNewToken(this, req); break;
+
+                default:
+                    console.log(`Unknown method ${req.method}`);
+            }
+        } catch (err: any) {
+            console.error(`Error handling request ${req.method}: ${err.message}`, req.params);
         }
     }
 
     private async validateRequest(req: NDKRpcRequest) {
         // TODO validate pubkey, validate signature
+    }
+
+    /**
+     * Command to list tokens
+     */
+    private async reqGetKeyTokens(req: NDKRpcRequest) {
+        const keyName = req.params[0];
+        const tokens = await prisma.token.findMany({
+            where: { keyName },
+            include: {
+                policy: {
+                    include: {
+                        rules: true,
+                    },
+                },
+                KeyUser: true,
+            },
+        });
+
+        const keys = await this.getKeys!();
+        const key = keys.find((k) => k.name === keyName);
+
+        if (!key || !key.npub) {
+            return this.rpc.sendResponse(req.id, req.pubkey, JSON.stringify([]), 24134);
+        }
+
+        const npub = key.npub;
+
+        const result = JSON.stringify(tokens.map((t) => {
+            return {
+                id: t.id,
+                key_name: t.keyName,
+                client_name: t.clientName,
+                token: [ npub, t.token ].join('#'),
+                policy_id: t.policyId,
+                policy_name: t.policy?.name,
+                created_at: t.createdAt,
+                updated_at: t.updatedAt,
+                expires_at: t.expiresAt,
+                redeemed_at: t.redeemedAt,
+                redeemed_by: t.KeyUser?.description,
+                time_until_expiration: t.expiresAt ? (t.expiresAt.getTime() - Date.now()) / 1000 : null,
+            };
+        }));
+
+        return this.rpc.sendResponse(req.id, req.pubkey, result, 24134);
+    }
+
+    /**
+     * Command to list policies
+     */
+    private async reqListPolicies(req: NDKRpcRequest) {
+        const policies = await prisma.policy.findMany({
+            include: {
+                rules: true,
+            },
+        });
+
+        const result = JSON.stringify(policies.map((p) => {
+            return {
+                id: p.id,
+                name: p.name,
+                description: p.description,
+                created_at: p.createdAt,
+                updated_at: p.updatedAt,
+                expires_at: p.expiresAt,
+                rules: p.rules.map((r) => {
+                    return {
+                        method: r.method,
+                        kind: r.kind,
+                        max_usage_count: r.maxUsageCount,
+                        current_usage_count: r.currentUsageCount,
+                    };
+                })
+            };
+        }));
+
+        return this.rpc.sendResponse(req.id, req.pubkey, result, 24134);
     }
 
     /**
@@ -126,8 +212,6 @@ class AdminInterface {
 
         return this.rpc.sendResponse(req.id, pubkey, result, 24134); // 24134
     }
-
-
 
     /**
      * This function is called when a request is received from a remote user that needs

@@ -18,8 +18,11 @@ export interface IConfig {
 const defaultConfig: IConfig = {
     nostr: {
         relays: [
+            'wss://relay.damus.io',
             'wss://nos.lol',
-            // 'wss://relay.damus.io'
+            'wss://relay.snort.social',
+            "wss://relay.nsecbunker.com",
+            "wss://nostr.vulpem.com",
         ]
     },
     admin: {

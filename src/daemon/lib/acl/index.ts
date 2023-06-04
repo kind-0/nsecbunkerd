@@ -63,7 +63,7 @@ export function requestToSigningConditionQuery(method: string, event?: NDKEvent)
 
     switch (method) {
         case 'sign_event':
-            signingConditionQuery.kind = event?.kind?.toString();
+            signingConditionQuery.kind = { in: [ event?.kind?.toString(), 'all' ] };
             break;
     }
 
@@ -97,24 +97,16 @@ export async function allowAllRequestsFromKey(
             create: { keyName, userPubkey: remotePubkey, description },
         });
 
-        console.log({ upsertedUser });
-
         // Create a new SigningCondition for the given KeyUser and set allowed to true
         const signingConditionQuery = allowScopeToSigningConditionQuery(method, allowScope);
         await prisma.signingCondition.create({
             data: {
                 allowed: true,
                 keyUserId: upsertedUser.id,
-                ...signingConditionQuery
+                ...signingConditionQuery,
+                kind: 'all'
             },
         });
-
-        console.log(`create`, {
-            allowed: true,
-            keyUserId: upsertedUser.id,
-            ...signingConditionQuery
-        });
-
     } catch (e) {
         console.log('allowAllRequestsFromKey', e);
     }
@@ -127,8 +119,6 @@ export async function rejectAllRequestsFromKey(remotePubkey: string, keyName: st
         update: { },
         create: { keyName, userPubkey: remotePubkey },
     });
-
-    console.log({ upsertedUser });
 
     // Create a new SigningCondition for the given KeyUser and set allowed to false
     await prisma.signingCondition.create({

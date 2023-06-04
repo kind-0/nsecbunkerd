@@ -17,9 +17,10 @@ model KeyUser {
   description       String?
   signingConditions SigningCondition[]
   logs              Log[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @default(now()) @updatedAt
-  lastUsedAt DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @default(now()) @updatedAt
+  lastUsedAt        DateTime?
+  Token             Token[]
 
   @@unique([keyName, userPubkey], name: "unique_key_user")
 }
@@ -44,4 +45,44 @@ model Log {
   params    String?
   KeyUser   KeyUser? @relation(fields: [keyUserId], references: [id])
   keyUserId Int?
+}
+
+model Policy {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @default(now()) @updatedAt
+  deletedAt   DateTime?
+  expiresAt   DateTime?
+  rules       PolicyRule[]
+  Token       Token[]
+}
+
+model PolicyRule {
+  id                Int     @id @default(autoincrement())
+  method            String
+  kind              String?
+  maxUsageCount     Int?
+  currentUsageCount Int?
+
+  Policy   Policy? @relation(fields: [policyId], references: [id])
+  policyId Int?
+}
+
+model Token {
+  id         Int       @id @default(autoincrement())
+  keyName    String
+  token      String    @unique
+  clientName String
+  createdBy  String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
+  deletedAt  DateTime?
+  expiresAt  DateTime?
+  redeemedAt DateTime?
+  KeyUser    KeyUser?  @relation(fields: [keyUserId], references: [id])
+  keyUserId  Int?
+  policy     Policy?   @relation(fields: [policyId], references: [id])
+  policyId   Int?
 }
