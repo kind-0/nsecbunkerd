@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:19-alpine as build
+FROM --platform=linux/amd64 node:slim as build
 WORKDIR /app
 
 COPY package.json .
