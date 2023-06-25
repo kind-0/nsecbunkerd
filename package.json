@@ -33,27 +33,27 @@
   "author": "pablof7z",
   "license": "CC BY-NC-ND 4.0",
   "dependencies": {
-    "@inquirer/password": "^1.0.0",
-    "@inquirer/prompts": "^1.0.0",
-    "@nostr-dev-kit/ndk": "^0.3.32",
+    "@inquirer/password": "^1.1.2",
+    "@inquirer/prompts": "^1.2.3",
+    "@nostr-dev-kit/ndk": "^0.6.0",
     "@prisma/client": "^4.16.1",
     "@scure/base": "^1.1.1",
     "@types/yargs": "^17.0.24",
-    "@typescript-eslint/eslint-plugin": "^5.57.0",
-    "@typescript-eslint/parser": "^5.57.0",
-    "dotenv": "^16.0.3",
-    "eslint": "^8.37.0",
+    "@typescript-eslint/eslint-plugin": "^5.60.0",
+    "@typescript-eslint/parser": "^5.60.0",
+    "dotenv": "^16.3.1",
+    "eslint": "^8.43.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
-    "eventemitter3": "^5.0.0",
+    "eventemitter3": "^5.0.1",
     "websocket-polyfill": "^0.0.3",
-    "yargs": "^17.7.1"
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "@types/debug": "^4.1.7",
-    "@types/node": "^18.15.11",
+    "@types/debug": "^4.1.8",
+    "@types/node": "^18.16.18",
     "prisma": "^4.16.1",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.3"
+    "typescript": "^5.1.3"
   }
 }
