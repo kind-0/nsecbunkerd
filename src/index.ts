@@ -13,7 +13,9 @@ console.log(`Copyright by pablof7z <pablo@f7z.io> 2023`);
 console.log(`Contact for licensing`);
 console.log(``);
 
-yargs(hideBin(process.argv))
+const adminNpubs = process.env.ADMIN_NPUBS ? process.env.ADMIN_NPUBS.split(',') : [];
+
+const argv = yargs(hideBin(process.argv))
     .command('setup', 'Setup nsecBunker', {}, (argv) => {
         setup(argv.config as string);
     })
@@ -42,7 +44,7 @@ yargs(hideBin(process.argv))
             keys: argv.key as string[],
             verbose: argv.verbose as boolean,
             config: argv.config as string,
-            adminNpubs: argv.admin as string[],
+            adminNpubs: [...new Set([...((argv.admin||[]) as string[]), ...adminNpubs])]
         });
     })
 
@@ -69,5 +71,5 @@ yargs(hideBin(process.argv))
             default: 'nsecbunker.json',
         },
     })
-    .demandCommand(1)
+    .demandCommand(0, 1)
     .parse();

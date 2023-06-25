@@ -1,6 +1,6 @@
 {
   "name": "nsecbunkerd",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "nsecbunker daemon",
   "main": "dist/index.js",
   "bin": {
@@ -36,7 +36,7 @@
     "@inquirer/password": "^1.0.0",
     "@inquirer/prompts": "^1.0.0",
     "@nostr-dev-kit/ndk": "^0.3.32",
-    "@prisma/client": "^4.15.0",
+    "@prisma/client": "^4.16.1",
     "@scure/base": "^1.1.1",
     "@types/yargs": "^17.0.24",
     "@typescript-eslint/eslint-plugin": "^5.57.0",
@@ -52,7 +52,7 @@
   "devDependencies": {
     "@types/debug": "^4.1.7",
     "@types/node": "^18.15.11",
-    "prisma": "^4.15.0",
+    "prisma": "^4.16.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.3"
   }
