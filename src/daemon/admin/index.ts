@@ -8,6 +8,7 @@ import createNewKey from './commands/create_new_key';
 import createNewPolicy from './commands/create_new_policy';
 import createNewToken from './commands/create_new_token';
 import unlockKey from './commands/unlock_key';
+import fs from 'fs';
 
 export type IAdminOpts = {
     npubs: string[];
@@ -46,6 +47,9 @@ class AdminInterface {
             }
 
             console.log(`\n\nnsecBunker connection string:\n\n${connectionString}\n\n`);
+
+            // write connection string to connection.txt
+            fs.writeFileSync('connection.txt', connectionString);
 
             this.signerUser = user;
 

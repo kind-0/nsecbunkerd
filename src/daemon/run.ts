@@ -44,8 +44,6 @@ function getKeys(config: DaemonConfig) {
             keys.push(key);
         }
 
-        console.log({ lockedKeyNames });
-
         for (const name of lockedKeyNames) {
             keys.push({ name });
         }
@@ -213,13 +211,9 @@ class Daemon {
         await this.ndk.connect(5000);
 
         setTimeout(async () => {
-            const promise = [];
-
             for (const [name, nsec] of Object.entries(this.config.keys)) {
-                promise.push(this.startKey(name, nsec));
+                await this.startKey(name, nsec);
             }
-
-            // await Promise.all(promise);
 
             console.log('✅ nsecBunker ready to serve requests.');
         }, 1000);

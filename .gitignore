@@ -4,4 +4,4 @@ dist
 **/*.d.ts
 **/*.d.ts.map
 nsecbunker.json
-prisma/nsecbunker.db*
+connection.txt
