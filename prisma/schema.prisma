@@ -1,40 +1,36 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./nsecbunker.db"
+  url      = "file:../config/nsecbunker.db"
 }
 
 model KeyUser {
   id                Int                @id @default(autoincrement())
   keyName           String
   userPubkey        String
-  description       String?
-  signingConditions SigningCondition[]
-  logs              Log[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @default(now()) @updatedAt
   lastUsedAt        DateTime?
+  description       String?
+  logs              Log[]
+  signingConditions SigningCondition[]
   Token             Token[]
 
   @@unique([keyName, userPubkey], name: "unique_key_user")
 }
 
 model SigningCondition {
-  id Int @id @default(autoincrement())
-
+  id             Int      @id @default(autoincrement())
   method         String?
   kind           String?
   content        String?
   keyUserKeyName String?
   allowed        Boolean?
-  KeyUser        KeyUser? @relation(fields: [keyUserId], references: [id])
   keyUserId      Int?
+  KeyUser        KeyUser? @relation(fields: [keyUserId], references: [id])
 }
 
 model Log {
@@ -43,18 +39,18 @@ model Log {
   type      String
   method    String?
   params    String?
-  KeyUser   KeyUser? @relation(fields: [keyUserId], references: [id])
   keyUserId Int?
+  KeyUser   KeyUser? @relation(fields: [keyUserId], references: [id])
 }
 
 model Policy {
   id          Int          @id @default(autoincrement())
   name        String
-  description String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @default(now()) @updatedAt
-  deletedAt   DateTime?
   expiresAt   DateTime?
+  deletedAt   DateTime?
+  description String?
   rules       PolicyRule[]
   Token       Token[]
 }
@@ -65,9 +61,8 @@ model PolicyRule {
   kind              String?
   maxUsageCount     Int?
   currentUsageCount Int?
-
-  Policy   Policy? @relation(fields: [policyId], references: [id])
-  policyId Int?
+  policyId          Int?
+  Policy            Policy? @relation(fields: [policyId], references: [id])
 }
 
 model Token {
@@ -81,8 +76,8 @@ model Token {
   deletedAt  DateTime?
   expiresAt  DateTime?
   redeemedAt DateTime?
-  KeyUser    KeyUser?  @relation(fields: [keyUserId], references: [id])
   keyUserId  Int?
-  policy     Policy?   @relation(fields: [policyId], references: [id])
   policyId   Int?
+  policy     Policy?   @relation(fields: [policyId], references: [id])
+  KeyUser    KeyUser?  @relation(fields: [keyUserId], references: [id])
 }

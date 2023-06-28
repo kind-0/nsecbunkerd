@@ -1,6 +1,6 @@
 {
   "name": "nsecbunkerd",
-  "version": "0.6.2",
+  "version": "0.6.4",
   "description": "nsecbunker daemon",
   "main": "dist/index.js",
   "bin": {
@@ -16,7 +16,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/sanity-island/nsecbunker"
+    "url": "https://github.com/kind-0/nsecbunkerd"
   },
   "scripts": {
     "build": "tsc",

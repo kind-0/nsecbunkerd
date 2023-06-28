@@ -68,7 +68,7 @@ const argv = yargs(hideBin(process.argv))
             alias: 'c',
             type: 'string',
             description: 'Path to config file',
-            default: 'nsecbunker.json',
+            default: 'config/nsecbunker.json',
         },
     })
     .demandCommand(0, 1)

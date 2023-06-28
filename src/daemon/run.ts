@@ -38,6 +38,8 @@ function getKeys(config: DaemonConfig) {
             const key = {
                 name,
                 npub: user.npub,
+                userCount: await prisma.keyUser.count({ where: { keyName: name } }),
+                tokenCount: await prisma.token.count({ where: { keyName: name } })
             };
 
             lockedKeyNames = lockedKeyNames.filter((keyName) => keyName !== name);

@@ -5,8 +5,21 @@ Daemon to remotely sign nostr events using keys.
 
 To quickly install `nsecbunkerd` via Docker just run:
 
+### Prepare your config directory
 ```
-docker run -d --name nsecbunkerd pablof7z/nsecbunkerd start --admin <your-npub>
+mkdir $HOME/.nsecbunker-config
+```
+
+### Start nsecbunkerd
+```
+docker run -d --name nsecbunkerd -v $HOME/.nsecbunker-config:/app/config pablof7z/nsecbunkerd start --admin <your-npub>
+docker exec -i nsecbunkerd npx prisma db push
+```
+
+### Get the connection string
+
+```
+docker exec nsecbunkerd cat /app/connection.txt
 ```
 
 nsecBunker will give you a connection string like:
@@ -15,7 +28,8 @@ nsecBunker will give you a connection string like:
 bunker://npub1tj2dmc4udvgafxxxxxxxrtgne8j8l6rgrnaykzc8sys9mzfcz@relay.nsecbunker.com
 ```
 
-You can visit https://app.nsecbunker.com/ to administrate your nsecBunker remotely.
+You can visit https://app.nsecbunker.com/ to administrate your nsecBunker remotely, or explore `nsecbunkerd`'s CLI
+to find the options to add and approve keys from the CLI.
 
 ## Hard setup:
 (If you installed via docker you don't need to do any of this, skip to the [Configure](#configure) section)
