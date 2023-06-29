@@ -35,7 +35,7 @@
   "dependencies": {
     "@inquirer/password": "^1.1.2",
     "@inquirer/prompts": "^1.2.3",
-    "@nostr-dev-kit/ndk": "^0.6.0",
+    "@nostr-dev-kit/ndk": "^0.6.5",
     "@prisma/client": "^4.16.1",
     "@scure/base": "^1.1.1",
     "@types/yargs": "^17.0.24",

@@ -62,18 +62,29 @@ async function setupSkeletonProfile(key: NDKPrivateKeySigner) {
     });
 
     await ndk.connect(2500);
-
-    user.profile = {
-        name: 'New User via nsecBunker',
-        bio: 'This is a skeleton profile. You should edit it.',
-        website: 'https://nsecbunkerd.com',
-    };
     user.ndk = ndk;
 
-    await user.publish();
+    let event = new NDKEvent(ndk, {
+        kind: 0,
+        content: JSON.stringify({
+            name: 'New User via nsecBunker',
+            bio: 'This is a skeleton profile. You should edit it.',
+            website: 'https://nsecbunkerd.com',
+        }),
+        pubkey: user.hexpubkey(),
+    } as NostrEvent);
+    await event.sign(key);
+    await event.publish();
 
-    const pablo = new NDKUser({npub: 'npub1l2vyh47mk2p0qlsku7hg0vn29faehy9hy34ygaclpn66ukqp3afqutajft'});
-    await user.follow(pablo);
+    event = new NDKEvent(ndk, {
+        kind: 3,
+        tags: [
+            ['p', 'fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52'],
+        ],
+        pubkey: user.hexpubkey(),
+    } as NostrEvent);
+    await event.sign(key);
+    await event.publish();
 
     const relays = new NDKEvent(ndk, {
         kind: 10002,
@@ -83,7 +94,9 @@ async function setupSkeletonProfile(key: NDKPrivateKeySigner) {
             ['r', 'wss://relay.snort.social'],
             ['r', 'wss://relay.damus.io'],
             ['r', 'wss://relay.damus.io'],
-        ]
+        ],
+        pubkey: user.hexpubkey(),
     } as NostrEvent);
+    await relays.sign(key);
     await relays.publish();
 }
