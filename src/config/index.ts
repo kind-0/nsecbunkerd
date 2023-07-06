@@ -2,6 +2,8 @@ import { readFileSync, writeFileSync } from 'fs';
 import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
 import { IAdminOpts } from '../daemon/admin';
 
+import { version } from '../package.json';
+
 const generatedKey = NDKPrivateKeySigner.generate();
 
 export interface IConfig {
@@ -56,6 +58,7 @@ async function getCurrentConfig(config: string): Promise<IConfig> {
 
 export function saveCurrentConfig(config: string, currentConfig: any) {
     try {
+        currentConfig.version = version;
         const configString = JSON.stringify(currentConfig, null, 2);
         writeFileSync(config, configString);
     } catch (err: any) {

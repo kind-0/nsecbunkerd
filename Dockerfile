@@ -10,9 +10,11 @@ COPY tsconfig.json .
 
 RUN apt-get update -y && apt-get install -y openssl
 
+RUN npx prisma generate
+
 RUN npm run build
 
-RUN npx prisma generate
+RUN npm i
 RUN npx prisma migrate deploy
 
 ENTRYPOINT [ "node", "dist/index.js" ]
