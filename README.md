@@ -86,7 +86,11 @@ $ npm run nsecbunkerd start
 
 ## Testing with `nsecbunker-client`
 
+nsecbunker ships with a simple client that can request signatures from an nsecbunkerd:
 
+```
+nsecbunker-client sign <target-npub> "hi, I'm signing from the command line with my nsecbunkerd!"
+```
 
 # Authors
 

@@ -18,7 +18,7 @@ interface IOpts {
 export async function start(opts: IOpts) {
     const configData = await getCurrentConfig(opts.config);
 
-    if (opts.adminNpubs) {
+    if (opts.adminNpubs && opts.adminNpubs.length > 0) {
         configData.admin.npubs = opts.adminNpubs;
     }
 

@@ -93,7 +93,6 @@ async function setupSkeletonProfile(key: NDKPrivateKeySigner) {
             ['r', 'wss://relay.f7z.io'],
             ['r', 'wss://relay.snort.social'],
             ['r', 'wss://relay.damus.io'],
-            ['r', 'wss://relay.damus.io'],
         ],
         pubkey: user.hexpubkey(),
     } as NostrEvent);

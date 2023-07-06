@@ -1,6 +1,6 @@
 {
   "name": "nsecbunkerd",
-  "version": "0.6.4",
+  "version": "0.7.1",
   "description": "nsecbunker daemon",
   "main": "dist/index.js",
   "bin": {
@@ -35,21 +35,23 @@
   "dependencies": {
     "@inquirer/password": "^1.1.2",
     "@inquirer/prompts": "^1.2.3",
-    "@nostr-dev-kit/ndk": "^0.6.5",
-    "@prisma/client": "^4.16.1",
+    "@nostr-dev-kit/ndk": "^0.7.4",
+    "@prisma/client": "^4.16.2",
     "@scure/base": "^1.1.1",
     "@types/yargs": "^17.0.24",
     "dotenv": "^16.3.1",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
     "eventemitter3": "^5.0.1",
+    "isomorphic-ws": "^5.0.0",
     "websocket-polyfill": "^0.0.3",
+    "ws": "^8.13.0",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
     "@types/debug": "^4.1.8",
     "@types/node": "^18.16.18",
-    "prisma": "^4.16.1",
+    "prisma": "^4.16.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.3"
   }

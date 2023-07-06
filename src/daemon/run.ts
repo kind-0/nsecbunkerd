@@ -70,11 +70,13 @@ function getKeyUsers(config: IConfig) {
 
         for (const user of users) {
             const keyUser = {
+                id: user.id,
                 name: user.keyName,
                 pubkey: user.userPubkey,
                 description: user.description || undefined,
                 createdAt: user.createdAt,
                 lastUsedAt: user.lastUsedAt || undefined,
+                revokedAt: user.revokedAt || undefined,
                 signingConditions: user.signingConditions, // Include signing conditions
             };
 
@@ -152,7 +154,13 @@ function callbackForKeyAdminInterface(keyName: string, adminInterface: AdminInte
                 return keyAllowed;
             }
 
-            return adminInterface.requestPermission(keyName, remotePubkey, method, param);
+            const requestedPerm = await adminInterface.requestPermission(keyName, remotePubkey, method, param);
+
+            if (requestedPerm === undefined) {
+                throw new Error('adminInterface.requestPermission returned undefined');
+            }
+
+            return requestedPerm;
         } catch(e) {
             console.log('callbackForKey error:', e);
         }
@@ -205,8 +213,24 @@ class Daemon {
         this.ndk = new NDK({
             explicitRelayUrls: config.nostr.relays,
         });
-        this.ndk.pool.on('connect', (r) => { console.log(`✅ Connected to ${r.url}`); });
+        this.ndk.pool.on('relay:connect', (r) => {
+            if (r) {
+                console.log(`✅ Connected to ${r.url}`);
+            } else {
+                console.log('✅ Connected to relays', this.ndk.pool.urls);
+            }
+        });
         this.ndk.pool.on('notice', (n, r) => { console.log(`👀 Notice from ${r.url}`, n); });
+
+        this.ndk.pool.on('relay:disconnect', (r) => {
+            console.log(`🚫 Disconnected from ${r.url}`);
+        });
+
+        setInterval(() => {
+            const stats = this.ndk.pool.stats();
+
+            console.log(`📡 ${stats.connected} connected, ${stats.disconnected} disconnected, ${stats.connecting} connecting`);
+        }, 10000);
     }
 
     async start() {

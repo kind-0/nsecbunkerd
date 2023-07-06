@@ -1,4 +1,4 @@
-import NDK, { NDKPrivateKeySigner, NDKRpcRequest, NDKRpcResponse, NDKUser } from '@nostr-dev-kit/ndk';
+import NDK, { NDKPrivateKeySigner, NDKRpcRequest, NDKRpcResponse, NDKUser, NostrEvent } from '@nostr-dev-kit/ndk';
 import { NDKNostrRpc } from '@nostr-dev-kit/ndk';
 import { debug } from 'debug';
 import { Key, KeyUser } from '../run';
@@ -8,7 +8,10 @@ import createNewKey from './commands/create_new_key';
 import createNewPolicy from './commands/create_new_policy';
 import createNewToken from './commands/create_new_token';
 import unlockKey from './commands/unlock_key';
+import revokeUser from './commands/revoke_user';
 import fs from 'fs';
+import { validateRequestFromAdmin } from './validations/request-from-admin';
+import { dmUser } from '../../utils/dm-user';
 
 export type IAdminOpts = {
     npubs: string[];
@@ -43,7 +46,7 @@ class AdminInterface {
             let connectionString = `bunker://${user.npub}`;
 
             if (opts.adminRelays.length > 0) {
-                connectionString += `@${opts.adminRelays.join(',').replace(/wss:\/\//g, '')}`;
+                connectionString += '@' + encodeURIComponent(`${opts.adminRelays.join(',').replace(/wss:\/\//g, '')}`);
             }
 
             console.log(`\n\nnsecBunker connection string:\n\n${connectionString}\n\n`);
@@ -54,9 +57,23 @@ class AdminInterface {
             this.signerUser = user;
 
             this.connect();
+
+            this.notifyAdminsOfNewConnection(connectionString);
         });
 
         this.rpc = new NDKNostrRpc(this.ndk, this.ndk.signer!, debug("ndk:rpc"));
+    }
+
+    private async notifyAdminsOfNewConnection(connectionString: string) {
+        const blastrNdk = new NDK({
+            explicitRelayUrls: ['wss://blastr.f7z.xyz', 'wss://nostr.mutinywallet.com'],
+            signer: this.ndk.signer
+        });
+        await blastrNdk.connect(2500);
+
+        for (const npub of this.npubs) {
+            dmUser(blastrNdk, npub, `nsecBunker has started; use ${connectionString} to connect to it and unlock your key(s)`);
+        }
     }
 
     /**
@@ -75,10 +92,10 @@ class AdminInterface {
         this.ndk.pool.on('relay:connect', () => console.log('✅ nsecBunker Admin Interface ready'));
         this.ndk.pool.on('relay:disconnect', () => console.log('❌ admin disconnected'));
         this.ndk.connect(2500).then(() => {
+            // connect for whitelisted admins
             this.rpc.subscribe({
                 "kinds": [24134 as number], // 24134
                 "#p": [this.signerUser!.hexpubkey()],
-                "authors": this.npubs.map((npub) => (new NDKUser({npub}).hexpubkey())),
             });
 
             this.rpc.on('request', (req) => this.handleRequest(req));
@@ -89,30 +106,38 @@ class AdminInterface {
     }
 
     private async handleRequest(req: NDKRpcRequest) {
-        // await this.validateRequest(req);
-
         try {
+            await this.validateRequest(req);
+
             switch (req.method) {
-                case 'get_keys': this.reqGetKeys(req); break;
-                case 'get_key_users': this.reqGetKeyUsers(req); break;
-                case 'get_key_tokens': this.reqGetKeyTokens(req); break;
-                case 'create_new_key': createNewKey(this, req); break;
-                case 'unlock_key': unlockKey(this, req); break;
-                case 'create_new_policy': createNewPolicy(this, req); break;
-                case 'get_policies': this.reqListPolicies(req); break;
-
-                case 'create_new_token': createNewToken(this, req); break;
-
+                case 'get_keys': await this.reqGetKeys(req); break;
+                case 'get_key_users': await this.reqGetKeyUsers(req); break;
+                case 'get_key_tokens': await this.reqGetKeyTokens(req); break;
+                case 'revoke_user': await revokeUser(this, req); break;
+                case 'create_new_key': await createNewKey(this, req); break;
+                case 'unlock_key': await unlockKey(this, req); break;
+                case 'create_new_policy': await createNewPolicy(this, req); break;
+                case 'get_policies': await this.reqListPolicies(req); break;
+                case 'create_new_token': await createNewToken(this, req); break;
                 default:
                     console.log(`Unknown method ${req.method}`);
+                    return this.rpc.sendResponse(
+                        req.id,
+                        req.pubkey,
+                        JSON.stringify(['error', `Unknown method ${req.method}`]),
+                        24134
+                    );
             }
         } catch (err: any) {
             console.error(`Error handling request ${req.method}: ${err.message}`, req.params);
+            return this.rpc.sendResponse(req.id, req.pubkey, JSON.stringify(['error', err?.message]), 24134);
         }
     }
 
-    private async validateRequest(req: NDKRpcRequest) {
-        // TODO validate pubkey, validate signature
+    private async validateRequest(req: NDKRpcRequest): Promise<void> {
+        if (!await validateRequestFromAdmin(req, this.npubs)) {
+            throw new Error('You are not designated to administrate this bunker');
+        }
     }
 
     /**
@@ -220,13 +245,15 @@ class AdminInterface {
     /**
      * This function is called when a request is received from a remote user that needs
      * to be approved by the admin interface.
+     *
+     * @returns true if the request is approved, false if it is denied, undefined if it timedout
      */
     public async requestPermission(
         keyName: string,
         remotePubkey: string,
         method: string,
         param: any
-    ): Promise<boolean> {
+    ): Promise<boolean | undefined> {
         const keyUser = await prisma.keyUser.findUnique({
             where: {
                 unique_key_user: {
@@ -254,52 +281,80 @@ class AdminInterface {
             console.log(`param`, param);
             console.log(`keyUser`, keyUser);
 
+            /**
+             * If an admin doesn't respond within 10 seconds, report back to the user that the request timed out
+             */
+            setTimeout(() => {
+                resolve(undefined);
+            }, 10000);
+
             for (const npub of this.npubs) {
                 const remoteUser = new NDKUser({npub});
                 console.log(`sending request to ${npub}`, remoteUser.hexpubkey());
+                const params = JSON.stringify({
+                    keyName,
+                    remotePubkey,
+                    method,
+                    param,
+                    description: keyUser?.description,
+                });
+
                 this.rpc.sendRequest(
                     remoteUser.hexpubkey(),
                     'acl',
-                    [JSON.stringify({
-                        keyName,
-                        remotePubkey,
-                        method,
-                        param,
-                        description: keyUser?.description,
-                    })],
-                    24134, // 24134
+                    [params],
+                    24134,
                     (res: NDKRpcResponse) => {
-                        let resObj;
-                        try {
-                            resObj = JSON.parse(res.result);
-                        } catch (e) {
-                            console.log('error parsing result', e);
-                            return;
-                        }
-
-                        console.log('request result', resObj);
-
-                        switch (resObj[0]) {
-                            case 'always': {
-                                allowAllRequestsFromKey(
-                                    remotePubkey,
-                                    keyName,
-                                    method,
-                                    param,
-                                    resObj[1],
-                                    resObj[2]
-                                ).then(() => {
-                                    resolve(true);
-                                });
-                                break;
-                            }
-                            default:
-                                console.log('request result', res.result);
-                        }
+                        this.requestPermissionResponse(
+                            remotePubkey,
+                            keyName,
+                            method,
+                            param,
+                            resolve,
+                            res
+                        );
                     }
                 );
             }
         });
+    }
+
+    public async requestPermissionResponse(
+        remotePubkey: string,
+        keyName: string,
+        method: string,
+        param: string,
+        resolve: (value: boolean) => void,
+        res: NDKRpcResponse
+    ) {
+        let resObj;
+        try {
+            resObj = JSON.parse(res.result);
+        } catch (e) {
+            console.log('error parsing result', e);
+            return;
+        }
+
+        switch (resObj[0]) {
+            case 'always': {
+                allowAllRequestsFromKey(
+                    remotePubkey,
+                    keyName,
+                    method,
+                    param,
+                    resObj[1],
+                    resObj[2]
+                );
+                resolve(true);
+                break;
+            }
+            case 'never': {
+                console.log('not implemented');
+                break;
+            }
+            default:
+                console.log('request result', res.result);
+        }
     }
 }
 
