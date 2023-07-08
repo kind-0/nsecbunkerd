@@ -46,6 +46,20 @@ export async function checkIfPubkeyAllowed(
 
     const allowed = signingCondition.allowed;
 
+    // Check if the key user has been revoked
+    if (allowed) {
+        const revoked = await prisma.keyUser.findFirst({
+            where: {
+                id: keyUser.id,
+                revokedAt: { not: null },
+            }
+        });
+
+        if (revoked) {
+            return false;
+        }
+    }
+
     if (allowed === true || allowed === false) {
         console.log(`found signing condition`, signingCondition);
         return allowed;

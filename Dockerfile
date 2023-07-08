@@ -5,6 +5,7 @@ COPY package.json package-lock.json .
 RUN npm i
 
 COPY src/ src/
+COPY scripts scripts/
 COPY prisma/schema.prisma prisma/
 COPY tsconfig.json .
 
@@ -17,5 +18,5 @@ RUN npm run build
 RUN npm i
 RUN npx prisma migrate deploy
 
-ENTRYPOINT [ "node", "dist/index.js" ]
+ENTRYPOINT [ "node", "scripts/start.js" ]
 CMD ["start"]
