@@ -225,12 +225,6 @@ class Daemon {
         this.ndk.pool.on('relay:disconnect', (r) => {
             console.log(`🚫 Disconnected from ${r.url}`);
         });
-
-        setInterval(() => {
-            const stats = this.ndk.pool.stats();
-
-            console.log(`📡 ${stats.connected} connected, ${stats.disconnected} disconnected, ${stats.connecting} connecting`);
-        }, 10000);
     }
 
     async start() {
