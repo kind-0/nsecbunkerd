@@ -1,0 +1,14 @@
+version: "3.3"
+
+services:
+     nsecbunkerd:
+       image: nsecbunkerd
+       build: .
+       restart: unless-stopped
+       pids_limit: 50
+       mem_limit: 256mb
+       memswap_limit: 256mb
+       networks:
+          - traefik-proxy
+       volumes:
+         - ./nsecbunker-config:/app/config
