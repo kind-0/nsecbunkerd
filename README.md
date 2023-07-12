@@ -11,10 +11,21 @@ mkdir $HOME/.nsecbunker-config
 ```
 
 ### Start nsecbunkerd
+
 ```
 docker run -d --name nsecbunkerd -v $HOME/.nsecbunker-config:/app/config pablof7z/nsecbunkerd start --admin <your-npub>
+docker compose exec nsecbunker npx prisma db push
+```
+
+#### Docker-compose
+Edit `docker-compose.yml` and add your nostrpublic key in `command` directive, like `start --admin npub1nftkhktqglvcsj5n4wetkpzxpy4e5x78wwj9y9p70ar9u5u8wh6qsxmzqs`
+
+And start the container
+```
+docker compose up -d
 docker exec -i nsecbunkerd npx prisma db push
 ```
+
 
 ### Get the connection string
 
