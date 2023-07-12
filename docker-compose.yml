@@ -8,7 +8,6 @@ services:
        pids_limit: 50
        mem_limit: 256mb
        memswap_limit: 256mb
-       networks:
-          - traefik-proxy
        volumes:
          - ./nsecbunker-config:/app/config
+       command: start --admin <npub>
