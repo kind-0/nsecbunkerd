@@ -111,4 +111,3 @@ nsecbunker-client sign <target-npub> "hi, I'm signing from the command line with
 # License
 
 CC BY-NC-ND 4.0
-Contact @pablof7z for licensing.
