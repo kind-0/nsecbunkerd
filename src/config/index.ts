@@ -25,6 +25,7 @@ const defaultConfig: IConfig = {
             'wss://relay.snort.social',
             "wss://relay.nsecbunker.com",
             "wss://nostr.vulpem.com",
+            'wss://soloco.nl',
         ]
     },
     admin: {
