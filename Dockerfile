@@ -1,14 +1,16 @@
-FROM --platform=linux/amd64 node:19-buster-slim as build
+FROM node:19-buster-slim as build
 WORKDIR /app
 
-COPY package.json package-lock.json .
+RUN apt-get update -y && apt-get install -y openssl python3 build-essential make gcc
+
+COPY package.json package-lock.json ./
 RUN npm i
+
+RUN apt-get purge -y gcc make build-essential && apt-get autoremove -y
 
 COPY src/ src/
 COPY prisma/schema.prisma prisma/
-COPY tsconfig.json .
-
-RUN apt-get update -y && apt-get install -y openssl
+COPY tsconfig.json ./
 
 RUN npx prisma generate
 
