@@ -49,7 +49,7 @@
     "eslint-plugin-import": "^2.27.5",
     "eventemitter3": "^5.0.1",
     "express": "^4.18.2",
-    "fastify": "link:fastify",
+    "fastify": "^4.24.3",
     "gravatar": "^1.8.2",
     "handlebars": "^4.7.8",
     "isomorphic-ws": "^5.0.0",
