@@ -40,7 +40,7 @@ export async function start(opts: IOpts) {
         }
     }
 
-    const daemonProcess = fork(resolve(__dirname, '../daemon/index.js'));
+    const daemonProcess = fork(resolve(__dirname, '../dist/daemon/index.js'));
     daemonProcess.send({
         configFile: opts.config,
         allKeys: configData.keys,
@@ -50,8 +50,12 @@ export async function start(opts: IOpts) {
 }
 
 interface KeyData {
-    iv: string;
-    data: string;
+    // Symmetrically encrypted key
+    iv?: string;
+    data?: string;
+
+    // Unencrypted key for remotely created keys with recovery option
+    key?: string;
 }
 
 /**
@@ -64,22 +68,35 @@ async function startKey(key: string, keyData: KeyData, verbose: boolean): Promis
     });
 
     return new Promise((resolve) => {
-        rl.question(`Enter passphrase for ${key}: `, (passphrase: string) => {
-            try {
-                const { iv, data } = keyData;
-                const nsec = decryptNsec(iv, data, passphrase);
+        if (keyData.iv && keyData.data) {
+            rl.question(`Enter passphrase for ${key}: `, (passphrase: string) => {
+                try {
+                    const { iv, data } = keyData;
+                    const nsec = decryptNsec(iv!, data!, passphrase);
 
-                if (verbose) {
-                    console.log(`Starting ${key}...`);
+                    if (verbose) {
+                        console.log(`Starting ${key}...`);
+                        process.exit(0);
+                    }
+
+                    rl.close();
+
+                    resolve(nsec);
+                } catch (e: any) {
+                    console.log(e.message);
+                    process.exit(1);
                 }
+            });
+        } else if (keyData.key) {
+            const nsec = keyData.key;
 
-                rl.close();
-
-                resolve(nsec);
-            } catch (e: any) {
-                console.log(e.message);
-                process.exit(1);
+            if (verbose) {
+                console.log(`Starting ${key}...`);
             }
-        });
+
+            rl.close();
+
+            resolve(nsec);
+        }
     });
 }

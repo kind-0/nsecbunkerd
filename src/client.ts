@@ -1,3 +1,4 @@
+import "websocket-polyfill";
 import NDK, { NDKUser, NDKEvent, NDKPrivateKeySigner, NDKNip46Signer, NostrEvent } from '@nostr-dev-kit/ndk';
 import fs from 'fs';
 
@@ -20,7 +21,7 @@ if (!command) {
 
 async function createNDK(): Promise<NDK> {
     const ndk = new NDK({
-        explicitRelayUrls: ['wss://nostr.vulpem.com', "wss://relay.nsecbunker.com"],
+        explicitRelayUrls: ['wss://relay.nsecbunker.com'],
     });
     if (debug) {
         ndk.pool.on('connect', () => console.log('✅ connected'));
@@ -71,10 +72,14 @@ function loadPrivateKey(): string | undefined {
         savePrivateKey(localSigner.privateKey!);
     }
 
-    const signer = new NDKNip46Signer(ndk, remoteUser.hexpubkey(), localSigner);
+    const signer = new NDKNip46Signer(ndk, remoteUser.hexpubkey, localSigner);
     if (debug) console.log(`local pubkey`, (await localSigner.user()).npub);
     if (debug) console.log(`remote pubkey`, remotePubkey);
     ndk.signer = signer;
+
+    signer.on("authUrl", (url) => {
+        console.log(`Go to ${url} to authorize this request`);
+    });
 
     setTimeout(async () => {
         try {
@@ -104,7 +109,7 @@ function loadPrivateKey(): string | undefined {
             } as NostrEvent);
         }
 
-        event.pubkey = remoteUser.hexpubkey();
+        event.pubkey = remoteUser.hexpubkey;
 
         try {
             await event.sign();

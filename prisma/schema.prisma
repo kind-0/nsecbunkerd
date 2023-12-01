@@ -7,6 +7,17 @@ datasource db {
   url      = "file:../config/nsecbunker.db"
 }
 
+model Request {
+    id            String   @id @default(uuid())
+    keyName       String?
+    createdAt     DateTime  @default(now())
+    requestId     String
+    remotePubkey  String
+    method        String
+    params        String?
+    allowed       Boolean?
+}
+
 model KeyUser {
   id                Int                @id @default(autoincrement())
   keyName           String
