@@ -1,23 +1,31 @@
-import NDK, { NDKPrivateKeySigner, NDKRpcRequest, NDKRpcResponse, NDKUser, NostrEvent } from '@nostr-dev-kit/ndk';
+import "websocket-polyfill";
+import NDK, { NDKEvent, NDKPrivateKeySigner, NDKRpcRequest, NDKRpcResponse, NDKUser, NostrEvent } from '@nostr-dev-kit/ndk';
 import { NDKNostrRpc } from '@nostr-dev-kit/ndk';
 import { debug } from 'debug';
 import { Key, KeyUser } from '../run';
 import { allowAllRequestsFromKey } from '../lib/acl/index.js';
 import prisma from '../../db';
+import createAccount from './commands/create_account';
+import ping from './commands/ping.js';
 import createNewKey from './commands/create_new_key';
 import createNewPolicy from './commands/create_new_policy';
 import createNewToken from './commands/create_new_token';
 import unlockKey from './commands/unlock_key';
+import renameKeyUser from './commands/rename_key_user.js';
 import revokeUser from './commands/revoke_user';
 import fs from 'fs';
 import { validateRequestFromAdmin } from './validations/request-from-admin';
 import { dmUser } from '../../utils/dm-user';
+import { IConfig, getCurrentConfig } from "../../config";
 
 export type IAdminOpts = {
     npubs: string[];
     adminRelays: string[];
     key: string;
 }
+
+// TODO: Move to configuration
+const allowNewKeys = true;
 
 /**
  * This class represents the admin interface for the nsecbunker daemon.
@@ -64,6 +72,10 @@ class AdminInterface {
         this.rpc = new NDKNostrRpc(this.ndk, this.ndk.signer!, debug("ndk:rpc"));
     }
 
+    public async config(): Promise<IConfig> {
+        return getCurrentConfig(this.configFile);
+    }
+
     private async notifyAdminsOfNewConnection(connectionString: string) {
         const blastrNdk = new NDK({
             explicitRelayUrls: ['wss://blastr.f7z.xyz', 'wss://nostr.mutinywallet.com'],
@@ -94,8 +106,8 @@ class AdminInterface {
         this.ndk.connect(2500).then(() => {
             // connect for whitelisted admins
             this.rpc.subscribe({
-                "kinds": [24134 as number], // 24134
-                "#p": [this.signerUser!.hexpubkey()],
+                "kinds": [24134 as number],
+                "#p": [this.signerUser!.pubkey],
             });
 
             this.rpc.on('request', (req) => this.handleRequest(req));
@@ -106,15 +118,19 @@ class AdminInterface {
     }
 
     private async handleRequest(req: NDKRpcRequest) {
+        console.log(`request coming in`, req);
         try {
             await this.validateRequest(req);
 
             switch (req.method) {
                 case 'get_keys': await this.reqGetKeys(req); break;
                 case 'get_key_users': await this.reqGetKeyUsers(req); break;
+                case 'rename_key_user': await renameKeyUser(this, req); break;
                 case 'get_key_tokens': await this.reqGetKeyTokens(req); break;
                 case 'revoke_user': await revokeUser(this, req); break;
                 case 'create_new_key': await createNewKey(this, req); break;
+                case 'create_account': await createAccount(this, req); break;
+                case 'ping': await ping(this, req); break;
                 case 'unlock_key': await unlockKey(this, req); break;
                 case 'create_new_policy': await createNewPolicy(this, req); break;
                 case 'get_policies': await this.reqListPolicies(req); break;
@@ -135,6 +151,12 @@ class AdminInterface {
     }
 
     private async validateRequest(req: NDKRpcRequest): Promise<void> {
+        // if this request is of type create_account, allow it
+        if (req.method === 'create_account' && allowNewKeys) {
+            console.log(`allowing create_account request`);
+            return;
+        }
+
         if (!await validateRequestFromAdmin(req, this.npubs)) {
             throw new Error('You are not designated to administrate this bunker');
         }
@@ -263,6 +285,8 @@ class AdminInterface {
             },
         });
 
+        console.trace({method, param});
+
         if (method === 'sign_event') {
             const e = param.rawEvent();
             param = JSON.stringify(e);
@@ -290,7 +314,7 @@ class AdminInterface {
 
             for (const npub of this.npubs) {
                 const remoteUser = new NDKUser({npub});
-                console.log(`sending request to ${npub}`, remoteUser.hexpubkey());
+                console.log(`sending request to ${npub}`, remoteUser.pubkey);
                 const params = JSON.stringify({
                     keyName,
                     remotePubkey,
@@ -300,7 +324,7 @@ class AdminInterface {
                 });
 
                 this.rpc.sendRequest(
-                    remoteUser.hexpubkey(),
+                    remoteUser.pubkey,
                     'acl',
                     [params],
                     24134,

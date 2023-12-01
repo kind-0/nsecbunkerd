@@ -13,7 +13,11 @@ export async function dmUser(ndk: NDK, recipient: NDKUser | string, content: str
     event.tag(targetUser);
     await event.encrypt(targetUser);
     await event.sign();
-    await event.publish();
+    try {
+        event.publish();
+    } catch (e) {
+        console.log(e);
+    }
 
     return event;
 }

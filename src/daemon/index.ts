@@ -1,3 +1,4 @@
+import "websocket-polyfill";
 import run from './run';
 import type {IConfig} from '../config/index';
 

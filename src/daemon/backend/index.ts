@@ -1,12 +1,24 @@
 import NDK, { NDKNip46Backend, Nip46PermitCallback } from '@nostr-dev-kit/ndk';
-import PublishEventHandlingStrategy from './publish-event.js';
 import prisma from '../../db.js';
+import type {FastifyInstance} from "fastify";
 
 export class Backend extends NDKNip46Backend {
-    constructor(ndk: NDK, key: string, cb: Nip46PermitCallback) {
+    public baseUrl: string;
+    public fastify: FastifyInstance;
+
+    constructor(
+        ndk: NDK,
+        fastify: FastifyInstance,
+        key: string,
+        cb: Nip46PermitCallback,
+        baseUrl?: string
+    ) {
         super(ndk, key, cb);
 
-        this.setStrategy('publish_event', new PublishEventHandlingStrategy());
+        this.baseUrl = baseUrl;
+        this.fastify = fastify;
+
+        // this.setStrategy('publish_event', new PublishEventHandlingStrategy());
     }
 
     private async validateToken(token: string) {

@@ -2,39 +2,45 @@ import { readFileSync, writeFileSync } from 'fs';
 import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
 import { IAdminOpts } from '../daemon/admin';
 
-import { version } from '../package.json';
+import { version } from '../../package.json';
 
 const generatedKey = NDKPrivateKeySigner.generate();
+
+export interface DomainConfig {
+    nip05: string;
+};
 
 export interface IConfig {
     nostr: {
         relays: string[];
     };
     admin: IAdminOpts;
+    authPort?: number;
     database: string;
     logs: string;
     keys: Record<string, any>;
+    baseUrl?: string;
     verbose: boolean;
+    domains?: Record<string, DomainConfig>;
 }
 
 const defaultConfig: IConfig = {
     nostr: {
         relays: [
             'wss://relay.damus.io',
-            'wss://nos.lol',
-            'wss://relay.snort.social',
             "wss://relay.nsecbunker.com",
-            "wss://nostr.vulpem.com",
+            "wss://nos.lol"
         ]
     },
+    authPort: 3000,
     admin: {
         npubs: [],
         adminRelays: [
-            "wss://nostr.vulpem.com",
             "wss://relay.nsecbunker.com"
         ],
         key: generatedKey.privateKey!
     },
+    baseUrl: "https://nostr.me",
     database: 'sqlite://nsecbunker.db',
     logs: './nsecbunker.log',
     keys: {},
