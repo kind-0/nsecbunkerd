@@ -34,6 +34,8 @@ to find the options to add and approve keys from the CLI.
 ## Hard setup:
 (If you installed via docker you don't need to do any of this, skip to the [Configure](#configure) section)
 
+Node.js v18 or newer is required.
+
 ```
 git clone <nsecbunkerd-repo>
 npm i
