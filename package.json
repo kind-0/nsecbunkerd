@@ -24,6 +24,7 @@
     "prisma:migrate": "npx prisma migrate deploy",
     "prisma:create": "npx prisma db push --preview-feature",
     "start": "node ./scripts/start.js",
+    "lfg": "node ./scripts/start.js start",
     "nsecbunkerd": "node dist/index.js",
     "nsecbunker-client": "node dist/client.js"
   },
