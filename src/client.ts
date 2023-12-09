@@ -21,7 +21,7 @@ if (!command) {
 
 async function createNDK(): Promise<NDK> {
     const ndk = new NDK({
-        explicitRelayUrls: ['wss://relay.nsecbunker.com'],
+        explicitRelayUrls: ['wss://relay.nsecbunker.com', 'wss://relay.damus.io', 'wss://nos.lol'],
     });
     if (debug) {
         ndk.pool.on('connect', () => console.log('✅ connected'));

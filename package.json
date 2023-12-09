@@ -1,11 +1,11 @@
 {
   "name": "nsecbunkerd",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "nsecbunker daemon",
   "main": "dist/index.js",
   "bin": {
     "nsecbunkerd": "dist/index.js",
-    "nsecbunker-client": "dist/client.js"
+    "nsecbunker-client": "dist/client/client.js"
   },
   "files": [
     "dist",
@@ -19,26 +19,26 @@
     "url": "https://github.com/kind-0/nsecbunkerd"
   },
   "scripts": {
-    "build": "tsup src/index.ts; tsup src/daemon/index.ts -d dist/daemon",
+    "build": "tsup src/index.ts; tsup src/daemon/index.ts -d dist/daemon; tsup src/client.ts -d dist/client",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate deploy",
     "prisma:create": "npx prisma db push --preview-feature",
     "start": "node ./scripts/start.js",
     "lfg": "node ./scripts/start.js start",
     "nsecbunkerd": "node dist/index.js",
-    "nsecbunker-client": "node dist/client.js"
+    "client": "node dist/client/client.js"
   },
   "keywords": [
     "nostr"
   ],
   "author": "pablof7z",
-  "license": "CC BY-NC-ND 4.0",
+  "license": "MIT",
   "dependencies": {
     "@fastify/formbody": "^7.4.0",
     "@fastify/view": "^8.2.0",
     "@inquirer/password": "^1.1.2",
     "@inquirer/prompts": "^1.2.3",
-    "@nostr-dev-kit/ndk": "^2.1.3",
+    "@nostr-dev-kit/ndk": "^2.2.0",
     "@prisma/client": "^5.4.1",
     "@scure/base": "^1.1.1",
     "@types/yargs": "^17.0.24",

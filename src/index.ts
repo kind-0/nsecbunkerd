@@ -7,12 +7,6 @@ import { setup } from './commands/setup.js';
 import { addNsec } from './commands/add.js';
 import { start } from './commands/start.js';
 
-console.log(`nsecBunker licensed under CC BY-NC-ND 4.0:`);
-console.log(`free to use for non-commercial use`);
-console.log(`Copyright by pablof7z <pablo@f7z.io> 2023`);
-console.log(`Contact for licensing`);
-console.log(``);
-
 const adminNpubs = process.env.ADMIN_NPUBS ? process.env.ADMIN_NPUBS.split(',') : [];
 
 const argv = yargs(hideBin(process.argv))
