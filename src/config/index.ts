@@ -28,8 +28,7 @@ const defaultConfig: IConfig = {
     nostr: {
         relays: [
             'wss://relay.damus.io',
-            "wss://relay.nsecbunker.com",
-            "wss://nos.lol"
+            "wss://relay.nsecbunker.com"
         ]
     },
     authPort: 3000,

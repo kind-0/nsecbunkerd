@@ -45,7 +45,7 @@ class AdminInterface {
 
     constructor(opts: IAdminOpts, configFile: string) {
         this.configFile = configFile;
-        this.npubs = opts.npubs;
+        this.npubs = opts.npubs||[];
         this.ndk = new NDK({
             explicitRelayUrls: opts.adminRelays,
             signer: new NDKPrivateKeySigner(opts.key),
@@ -83,7 +83,7 @@ class AdminInterface {
         });
         await blastrNdk.connect(2500);
 
-        for (const npub of this.npubs) {
+        for (const npub of this.npubs||[]) {
             dmUser(blastrNdk, npub, `nsecBunker has started; use ${connectionString} to connect to it and unlock your key(s)`);
         }
     }

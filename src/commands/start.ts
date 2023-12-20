@@ -76,7 +76,6 @@ async function startKey(key: string, keyData: KeyData, verbose: boolean): Promis
 
                     if (verbose) {
                         console.log(`Starting ${key}...`);
-                        process.exit(0);
                     }
 
                     rl.close();

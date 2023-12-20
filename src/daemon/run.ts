@@ -248,7 +248,7 @@ class Daemon {
         this.fastify.post('/register/:id', processRegistrationWebHandler);
 
         setTimeout(async () => {
-            console.log('🔑 Starting keys', this.config.keys);
+            console.log('🔑 Starting keys', Object.keys(this.config.keys));
             for (const [name, nsec] of Object.entries(this.config.keys)) {
                 await this.startKey(name, nsec);
             }

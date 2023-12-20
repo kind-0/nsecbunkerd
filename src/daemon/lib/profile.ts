@@ -49,8 +49,6 @@ export async function setupSkeletonProfile(key: NDKPrivateKeySigner, profile?: N
     } as NostrEvent);
     await event.sign(key);
 
-    console.log(`trying to publish profile`, event.rawEvent());
-
     const t = await event.publish();
     console.log(t);
 
@@ -62,6 +60,7 @@ export async function setupSkeletonProfile(key: NDKPrivateKeySigner, profile?: N
         pubkey: user.pubkey,
     } as NostrEvent);
     await event.sign(key);
+    console.log(`trying to publish profile`, event.rawEvent());
     await event.publish();
 
     const relays = new NDKEvent(ndk, {

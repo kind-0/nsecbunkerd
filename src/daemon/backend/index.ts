@@ -3,7 +3,7 @@ import prisma from '../../db.js';
 import type {FastifyInstance} from "fastify";
 
 export class Backend extends NDKNip46Backend {
-    public baseUrl: string;
+    public baseUrl?: string;
     public fastify: FastifyInstance;
 
     constructor(

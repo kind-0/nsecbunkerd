@@ -6,12 +6,9 @@ import { IConfig, getCurrentConfig, saveCurrentConfig } from "../../../config";
 import { readFileSync, writeFileSync } from "fs";
 import { allowAllRequestsFromKey } from "../../lib/acl";
 import { requestAuthorization } from "../../authorize";
+import prisma from "../../../db";
 
 export async function validate(currentConfig, email: string, username: string, domain: string) {
-    if (!email) {
-        throw new Error('email is required');
-    }
-
     if (!username) {
         throw new Error('username is required');
     }
@@ -41,6 +38,9 @@ async function getCurrentNip05File(currentConfig: any, domain: string) {
 async function addNip05(currentConfig: IConfig, username: string, domain: string, pubkey: Hexpubkey) {
     const currentNip05s = await getCurrentNip05File(currentConfig, domain);
     currentNip05s.names[username] = pubkey;
+    currentNip05s.relays ??= {};
+    currentNip05s.nip46Relays ??= {};
+    currentNip05s.nip46Relays[username] = currentConfig.nostr.relays;
 
     // save file
     const nip05File = currentConfig.domains![domain].nip05;
@@ -96,6 +96,8 @@ export async function createAccountReal(admin: AdminInterface, req: NDKRpcReques
         saveCurrentConfig(admin.configFile, currentConfig);
 
         await admin.loadNsec!(keyName, nsec);
+
+        await prisma.key.create({ data: { keyName, pubkey: generatedUser.pubkey } });
 
         // Immediately grant access to the creator key
         await grantPermissions(req, keyName);

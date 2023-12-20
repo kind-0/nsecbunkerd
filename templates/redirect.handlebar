@@ -38,33 +38,40 @@
             </h1>
         </div>
 
-        <form action="/register/{{record.id}}" method="POST" class="flex flex-col gap-2">
-            <label>
-                <span>Recovery Email</span>
-                <input type="email" name="email" value="{{email}}" required class="w-full px-4 py-3 bg-white rounded-lg shadow border border-neutral-200 justify-start items-center gap-2 inline-flex" />
-            </label>
-
-            <label>
-                <span>Username</span>
-                <div class="flex flex-row gap-2 items-center relative">
-                    <input type="text" name="username" value="{{username}}" class="w-full px-4 py-3 bg-white rounded-lg shadow border border-neutral-200 justify-start items-center gap-2 inline-flex pr-[50%]" />
-                    <span class="text-gray-500 text-sm absolute right-4">
-                        @{{domain}}
-                    </span>
-
+        <div class="text-xl font-semibold py-10">
+            {{#if callbackUrl}}
+                <div class="flex justify-center mb-6">
+                    <p class="text-center text-gray-600">
+                        You are being redirected to <span class="font-bold">{{callbackUrl}}</span>
+                    </p>
                 </div>
-            </label>
 
-            <label>
-                <span>Password</span>
-                <input type="password" name="password" placeholder="Enter a Password" class="w-full px-4 py-3 bg-white rounded-lg rounded-b-none shadow border border-neutral-200 justify-start items-center gap-2 inline-flex" />
-                <input type="password" name="password" placeholder="Password confirmation" class="w-full px-4 py-3 bg-white rounded-lg rounded-t-none shadow border border-neutral-200 justify-start items-center gap-2 inline-flex" />
-            </label>
+                <div class="flex justify-center mb-6">
+                    <p class="text-center text-gray-600">
+                        If you are not redirected automatically, follow this <a href="{{callbackUrl}}" class="text-primary">link</a>
+                    </p>
+                </div>
+            {{else}}
+                <div class="flex justify-center mb-6">
+                    <p class="text-center text-gray-600">
+                        You can close this window now.
+                    </p>
+                </div>
 
-            <input type="hidden" name="callbackUrl" value="{{callbackUrl}}" />
-
-            <button type="submit" class="px-6 py-3 bg-black font-bold rounded-lg justify-center items-center gap-2 inline-flex text-white text-base font-semibold mt-6">Sign Up</button>
-        </form>
+                <button class="bg-primary text-white rounded px-4 py-2" onclick="window.close()">
+                    Close
+                </button>
+            {{/if}}
+        </div>
     </div>
+
+    <script>
+        // If callbackUrl is not provided, close the window
+        if (!"{{callbackUrl}}") {
+        } else {
+            // If callbackUrl is provided, redirect to it
+            window.location.href = "{{callbackUrl}}";
+        }
+    </script>
 </body>
 </html>

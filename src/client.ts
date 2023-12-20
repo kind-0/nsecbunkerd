@@ -14,14 +14,14 @@ if (!command) {
     console.log(`\t<command>:          command to run (ping, sign)`);
     console.log(`\t<remote-npub>:      npub that should be published as`);
     console.log(`\t<content>:          event JSON to sign (no need for pubkey or id fields) | or kind:1 content string to sign`);
-    console.log('\t--dont-publish:     do not publish the event to the relay');
     console.log('\t--debug:            enable debug mode');
     process.exit(1);
 }
 
 async function createNDK(): Promise<NDK> {
     const ndk = new NDK({
-        explicitRelayUrls: ['wss://relay.nsecbunker.com', 'wss://relay.damus.io', 'wss://nos.lol'],
+        explicitRelayUrls: ['wss://relay.nsecbunker.com'],
+        enableOutboxModel: false
     });
     if (debug) {
         ndk.pool.on('connect', () => console.log('✅ connected'));
@@ -114,16 +114,9 @@ function loadPrivateKey(): string | undefined {
         try {
             await event.sign();
             if (debug) {
-                console.log({
-                    event: event.rawEvent(),
-                    signature: event.sig,
-                });
+                console.log(event.rawEvent());
             } else {
                 console.log(event.sig);
-            }
-
-            if (!dontPublish) {
-                await event.publish();
             }
 
             process.exit(0);

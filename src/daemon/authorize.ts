@@ -54,10 +54,9 @@ async function createRecord(
     let params: string | undefined;
 
     if (param?.rawEvent) {
-        console.log("Treating as NDKEvent", typeof param);
-        params = JSON.stringify(param.rawEvent());
+        const e = param as NDKEvent;
+        params = JSON.stringify(e.rawEvent());
     } else if (param) {
-        console.log("Treating as string", typeof param);
         params = param.toString();
     }
 
@@ -100,20 +99,16 @@ export function urlAuthFlow(
             where: { id: request.id }
         });
 
-        console.log('record', record);
-
         if (!record) {
             clearInterval(checkingInterval);
             return;
         }
 
-        console.log(`request ${request.id} = ${request.allowed}`);
-
         if (record.allowed !== undefined && record.allowed !== null) {
             clearInterval(checkingInterval);
             resolve(!!record.allowed);
         }
-    }, 1000);
+    }, 100);
 }
 
 function generatePendingAuthUrl(baseUrl: string, request: Request): string {

@@ -14,7 +14,7 @@ export async function dmUser(ndk: NDK, recipient: NDKUser | string, content: str
     await event.encrypt(targetUser);
     await event.sign();
     try {
-        event.publish();
+        await event.publish();
     } catch (e) {
         console.log(e);
     }
