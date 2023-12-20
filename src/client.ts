@@ -3,17 +3,21 @@ import NDK, { NDKUser, NDKEvent, NDKPrivateKeySigner, NDKNip46Signer, NostrEvent
 import fs from 'fs';
 
 const command = process.argv[2];
-const remotePubkey = process.argv[3];
-const content = process.argv[4];
+let remotePubkey = process.argv[3];
+let content = process.argv[4];
 const dontPublish = process.argv.includes('--dont-publish');
 const debug = process.argv.includes('--debug');
+let signer: NDKNip46Signer;
+let ndk: NDK;
+let remoteUser: NDKUser;
 
 if (!command) {
     console.log('Usage: node src/client.js <command> <remote-npub> <content> [--dont-publish] [--debug] [--pk <key>]');
     console.log('');
     console.log(`\t<command>:          command to run (ping, sign)`);
     console.log(`\t<remote-npub>:      npub that should be published as`);
-    console.log(`\t<content>:          event JSON to sign (no need for pubkey or id fields) | or kind:1 content string to sign`);
+    console.log(`\t<content>:          sign flow: event JSON to sign (no need for pubkey or id fields) | or kind:1 content string to sign\n`);
+    console.log(`\t                    create_account flow: [desired-nip05[,desired-domain,[email]]]`);
     console.log('\t--debug:            enable debug mode');
     process.exit(1);
 }
@@ -24,8 +28,8 @@ async function createNDK(): Promise<NDK> {
         enableOutboxModel: false
     });
     if (debug) {
-        ndk.pool.on('connect', () => console.log('✅ connected'));
-        ndk.pool.on('disconnect', () => console.log('❌ disconnected'));
+        ndk.pool.on('relay:connect', () => console.log('✅ connected'));
+        ndk.pool.on('relay:disconnect', () => console.log('❌ disconnected'));
     }
     await ndk.connect(5000);
 
@@ -59,11 +63,35 @@ function loadPrivateKey(): string | undefined {
 
 
 (async () => {
-    const remoteUser = new NDKUser({npub: remotePubkey});
-    const ndk = await createNDK();
+    let remoteUser: NDKUser;
+
+    // if this is the create_account command and we have something that doesn't look like an npub as the remotePubkey, use NDKUser.fromNip05 to get the npub
+    if (command === 'create_account' && !remotePubkey.startsWith("npub")) {
+        // see if we have a username@domain
+        let [ username, domain ] = remotePubkey.split('@');
+
+        if (!domain) {
+            domain = username;
+            username = Math.random().toString(36).substring(2, 15);
+        }
+
+        content = `${username},${domain}`
+
+        const u = await NDKUser.fromNip05(domain);
+        if (!u) {
+            console.log(`Invalid nip05 ${remotePubkey}`);
+            process.exit(1);
+        }
+        remoteUser = u;
+        remotePubkey = remoteUser.pubkey;
+    } else {
+        remoteUser = new NDKUser({npub: remotePubkey});
+    }
+
+    ndk = await createNDK();
+    let localSigner: NDKPrivateKeySigner;
 
     const pk = loadPrivateKey();
-    let localSigner: NDKPrivateKeySigner;
 
     if (pk) {
         localSigner = new NDKPrivateKeySigner(pk);
@@ -72,7 +100,7 @@ function loadPrivateKey(): string | undefined {
         savePrivateKey(localSigner.privateKey!);
     }
 
-    const signer = new NDKNip46Signer(ndk, remoteUser.hexpubkey, localSigner);
+    signer = new NDKNip46Signer(ndk, remoteUser.pubkey, localSigner);
     if (debug) console.log(`local pubkey`, (await localSigner.user()).npub);
     if (debug) console.log(`remote pubkey`, remotePubkey);
     ndk.signer = signer;
@@ -81,6 +109,27 @@ function loadPrivateKey(): string | undefined {
         console.log(`Go to ${url} to authorize this request`);
     });
 
+    switch (command) {
+        case "sign": return signFlow();
+        case "create_account": return createAccountFlow();
+        default:
+            console.log(`Unknown command ${command}`);
+            process.exit(1);
+    }
+})();
+
+async function createAccountFlow() {
+    const [ username, domain, email ] = content.split(',').map((s) => s.trim());
+    try {
+        const pubkey = await signer.createAccount(username, domain, email);
+        const user = new NDKUser({pubkey});
+        console.log(`Hello`, user.npub);
+    } catch (e) {
+        console.log('error', e);
+    }
+}
+
+function signFlow() {
     setTimeout(async () => {
         try {
             if (debug) console.log(`waiting for authorization (check your nsecBunker)...`);
@@ -109,8 +158,6 @@ function loadPrivateKey(): string | undefined {
             } as NostrEvent);
         }
 
-        event.pubkey = remoteUser.hexpubkey;
-
         try {
             await event.sign();
             if (debug) {
@@ -124,4 +171,4 @@ function loadPrivateKey(): string | undefined {
             console.log('sign error', e);
         }
     }, 2000);
-})();
+}

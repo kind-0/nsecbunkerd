@@ -19,10 +19,7 @@ export async function authorizeRequestWebHandler(request, reply) {
 
     if (method === "create_account") {
         const payload = JSON.parse(record.params);
-        console.log({payload});
-        email = payload.email;
-        username = payload.username;
-        domain = payload.domain;
+        const [ username, domain, email ] = payload;
         nip05 = `${username}@${domain}`;
 
         return reply.view("/templates/createAccount.handlebar", { record, email, username, domain, nip05, callbackUrl });
@@ -74,14 +71,27 @@ export async function processRegistrationWebHandler(request, reply) {
     const record = await prisma.request.findUnique({
         where: { id: request.params.id }
     });
+    const body = request.body;
 
     if (!record || record.allowed) {
         return { ok: false, error: "Request not found or already processed" };
     }
 
+    // we serialize the payload again and store it
+    // along with the allowed flag
+    // so that the original caller can get the current state
+    // to be processed
+    const payload: string[] = [];
+    payload.push(body.username);
+    payload.push(body.domain);
+    payload.push(body.email);
+    payload.push(body.password);
+
+    // TODO: validations here
+
     await prisma.request.update({
         where: { id: request.params.id },
-        data: { allowed: true }
+        data: { params: JSON.stringify(payload), allowed: true }
     });
 
     let createdPubkey: string | undefined;
@@ -100,7 +110,6 @@ export async function processRegistrationWebHandler(request, reply) {
         }, 100);
     });
 
-    const body = request.body;
     const callbackUrlString = body.callbackUrl;
     let callbackUrl: string | undefined;
 

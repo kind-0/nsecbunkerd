@@ -51,14 +51,15 @@
                     <span class="text-gray-500 text-sm absolute right-4">
                         @{{domain}}
                     </span>
-
                 </div>
             </label>
+
+            <input type="hidden" name="domain" value="{{domain}}" />
 
             <label>
                 <span>Password</span>
                 <input type="password" name="password" placeholder="Enter a Password" class="w-full px-4 py-3 bg-white rounded-lg rounded-b-none shadow border border-neutral-200 justify-start items-center gap-2 inline-flex" />
-                <input type="password" name="password" placeholder="Password confirmation" class="w-full px-4 py-3 bg-white rounded-lg rounded-t-none shadow border border-neutral-200 justify-start items-center gap-2 inline-flex" />
+                <input type="password" name="confirm_password" placeholder="Password confirmation" class="w-full px-4 py-3 bg-white rounded-lg rounded-t-none shadow border border-neutral-200 justify-start items-center gap-2 inline-flex" />
             </label>
 
             <input type="hidden" name="callbackUrl" value="{{callbackUrl}}" />

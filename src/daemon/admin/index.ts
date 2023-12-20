@@ -1,5 +1,5 @@
 import "websocket-polyfill";
-import NDK, { NDKEvent, NDKPrivateKeySigner, NDKRpcRequest, NDKRpcResponse, NDKUser, NostrEvent } from '@nostr-dev-kit/ndk';
+import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKRpcRequest, NDKRpcResponse, NDKUser, NostrEvent } from '@nostr-dev-kit/ndk';
 import { NDKNostrRpc } from '@nostr-dev-kit/ndk';
 import { debug } from 'debug';
 import { Key, KeyUser } from '../run';
@@ -106,8 +106,8 @@ class AdminInterface {
         this.ndk.connect(2500).then(() => {
             // connect for whitelisted admins
             this.rpc.subscribe({
-                "kinds": [24134 as number],
-                "#p": [this.signerUser!.pubkey],
+                "kinds": [NDKKind.NostrConnect, 24134 as number],
+                "#p": [this.signerUser!.pubkey]
             });
 
             this.rpc.on('request', (req) => this.handleRequest(req));
@@ -146,12 +146,13 @@ class AdminInterface {
             }
         } catch (err: any) {
             console.error(`Error handling request ${req.method}: ${err.message}`, req.params);
-            return this.rpc.sendResponse(req.id, req.pubkey, JSON.stringify(['error', err?.message]), 24134);
+            return this.rpc.sendResponse(req.id, req.pubkey, "error", NDKKind.NostrConnectAdmin, err?.message);
         }
     }
 
     private async validateRequest(req: NDKRpcRequest): Promise<void> {
         // if this request is of type create_account, allow it
+        // TODO: require some POW to prevent spam
         if (req.method === 'create_account' && allowNewKeys) {
             console.log(`allowing create_account request`);
             return;

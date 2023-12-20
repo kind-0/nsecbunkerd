@@ -1,4 +1,4 @@
-import { Hexpubkey, NDKPrivateKeySigner, NDKRpcRequest, NDKUserProfile } from "@nostr-dev-kit/ndk";
+import { Hexpubkey, NDKKind, NDKPrivateKeySigner, NDKRpcRequest, NDKUserProfile } from "@nostr-dev-kit/ndk";
 import AdminInterface from "..";
 import { nip19 } from 'nostr-tools';
 import { setupSkeletonProfile } from "../../lib/profile";
@@ -8,7 +8,7 @@ import { allowAllRequestsFromKey } from "../../lib/acl";
 import { requestAuthorization } from "../../authorize";
 import prisma from "../../../db";
 
-export async function validate(currentConfig, email: string, username: string, domain: string) {
+export async function validate(currentConfig, username: string, domain: string, email?: string) {
     if (!username) {
         throw new Error('username is required');
     }
@@ -47,32 +47,82 @@ async function addNip05(currentConfig: IConfig, username: string, domain: string
     writeFileSync(nip05File, JSON.stringify(currentNip05s, null, 2));
 }
 
+async function validateUsername(username: string | undefined, domain: string, admin: AdminInterface, req: NDKRpcRequest) {
+    if (!username || username.length === 0) {
+        // create a random username of 10 characters
+        username = Math.random().toString(36).substring(2, 15);
+    }
+
+    return username;
+}
+
+async function validateDomain(domain: string | undefined, admin: AdminInterface, req: NDKRpcRequest) {
+    const availableDomains = (await admin.config()).domains;
+
+    if (!availableDomains || Object.keys(availableDomains).length === 0)
+        throw new Error('no domains available');
+
+    if (!domain || domain.length === 0) domain = Object.keys(availableDomains)[0];
+
+    // check if the domain is available
+    if (!availableDomains[domain]) {
+        throw new Error('domain not available');
+    }
+
+    return domain;
+}
+
 export default async function createAccount(admin: AdminInterface, req: NDKRpcRequest) {
-    const [ payload ] = req.params as [ string ];
-    const { email, username, domain } = JSON.parse(payload);
+    let [ username, domain, email ] = req.params as [ string?, string?, string? ];
+
+    try {
+        domain = await validateDomain(domain, admin, req);
+        username = await validateUsername(username, domain, admin, req);
+    } catch (e: any) {
+        admin.rpc.sendResponse(req.id, req.pubkey, "error", NDKKind.NostrConnectAdmin, e.message);
+        return;
+    }
+
     const nip05 = `${username}@${domain}`;
-    if (
-        await requestAuthorization(
-            admin,
-            nip05,
-            req.pubkey,
-            req.id,
-            req.method,
-            payload
-        )
-    ) {
-        console.log('authorized');
-        return createAccountReal(admin, req);
+    const payload: string[] = [ username, domain ];
+    if (email) payload.push(email);
+
+    console.log('requesting authorization', payload);
+
+    const authorizationWithPayload = await requestAuthorization(
+        admin,
+        nip05,
+        req.pubkey,
+        req.id,
+        req.method,
+        JSON.stringify(payload)
+    );
+    console.log('authorizationWithPayload', authorizationWithPayload);
+
+    if (authorizationWithPayload) {
+        const payload = JSON.parse(authorizationWithPayload);
+        username = payload[0];
+        domain = payload[1];
+        email = payload[2];
+        return createAccountReal(admin, req, username, domain, email);
     }
 }
 
-export async function createAccountReal(admin: AdminInterface, req: NDKRpcRequest) {
+export async function createAccountReal(
+    admin: AdminInterface,
+    req: NDKRpcRequest,
+    username: string,
+    domain: string,
+    email?: string
+) {
+    // Fetch record since the authorization backend might have changed it
+
+
+    console.log('creating account');
     try {
         const currentConfig = await getCurrentConfig(admin.configFile);
-        const [ payload ] = req.params as [ string ];
-        const { email, username, domain } = JSON.parse(payload);
 
-        await validate(currentConfig, email, username, domain);
+        await validate(currentConfig, username, domain, email);
 
         const nip05 = `${username}@${domain}`;
         const key = NDKPrivateKeySigner.generate();
@@ -91,8 +141,6 @@ export async function createAccountReal(admin: AdminInterface, req: NDKRpcReques
         const nsec = nip19.nsecEncode(key.privateKey!);
         currentConfig.keys[keyName] = { key: key.privateKey };
 
-        console.log('saving new key', {keyName, privateKey: key.privateKey});
-
         saveCurrentConfig(admin.configFile, currentConfig);
 
         await admin.loadNsec!(keyName, nsec);
@@ -102,16 +150,11 @@ export async function createAccountReal(admin: AdminInterface, req: NDKRpcReques
         // Immediately grant access to the creator key
         await grantPermissions(req, keyName);
 
-        return admin.rpc.sendResponse(req.id, req.pubkey, JSON.stringify([
-            generatedUser.pubkey,
-
-        ]));
+        return admin.rpc.sendResponse(req.id, req.pubkey, generatedUser.pubkey, NDKKind.NostrConnectAdmin);
     } catch (e: any) {
         console.trace('error', e);
-        return admin.rpc.sendResponse(req.id, req.pubkey, JSON.stringify([
-            "error",
-            e.message
-        ]), 24134);
+        return admin.rpc.sendResponse(req.id, req.pubkey, "error", NDKKind.NostrConnectAdmin,
+            e.message);
     }
 }
 

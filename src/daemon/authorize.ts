@@ -28,18 +28,23 @@ export async function requestAuthorization(
         console.log('baseUrl', baseUrl);
     }
 
-    return new Promise<boolean>((resolve) => {
+    return new Promise<string>((resolve, reject) => {
         if (baseUrl) {
             // If we have a URL, request authorization through web
-            urlAuthFlow(baseUrl, admin, remotePubkey, requestId, request, resolve);
+            urlAuthFlow(baseUrl, admin, remotePubkey, requestId, request, resolve, reject);
         }
-        adminAuthFlow(admin, keyName, remotePubkey, method, param, resolve);
+        adminAuthFlow(admin, keyName, remotePubkey, method, param, resolve, reject);
     });
 }
 
-async function adminAuthFlow(adminInterface, keyName, remotePubkey, method, param, resolve) {
+async function adminAuthFlow(adminInterface, keyName, remotePubkey, method, param, resolve, reject) {
     const requestedPerm = await adminInterface.requestPermission(keyName, remotePubkey, method, param);
-    return requestedPerm;
+
+    if (requestedPerm) {
+        resolve();
+    } else {
+        reject();
+    }
 }
 
 async function createRecord(
@@ -82,11 +87,10 @@ export function urlAuthFlow(
     remotePubkey: Hexpubkey,
     requestId: string,
     request: Request,
-    resolve: any
+    resolve: any,
+    reject: any
 ) {
     const url = generatePendingAuthUrl(baseUrl, request);
-
-    console.log({url});
 
     admin.rpc.sendResponse(requestId, remotePubkey, "auth_url", undefined, url);
 
@@ -106,7 +110,11 @@ export function urlAuthFlow(
 
         if (record.allowed !== undefined && record.allowed !== null) {
             clearInterval(checkingInterval);
-            resolve(!!record.allowed);
+
+            if (record.allowed === false) {
+                reject(record.payload);
+            }
+            resolve(record.params);
         }
     }, 100);
 }
