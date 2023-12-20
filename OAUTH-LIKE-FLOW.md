@@ -1,12 +1,10 @@
 # OAuth-like flow
 
-The OAuth-like flow is a way to create new users in the bunker.
+The OAuth-like flow is a way to create new users in the bunker remotely. This is an interesting flow since it allows users to create accounts without having to install any extension or having to deal with key management, while retaining the function of interoperability with other NIP-46-supporting clients.
 
-The goal of this flow is to provide a flow that is familiar for new users that are not familiar with key management and that doesn't requrie installing extensions.
+The way it works is, a new user goes to a client that implements this flow, when they click 'register':
 
-The way it works is, a new user without a nostr account goes to an client that implements this flow, when they click register the following happen:
-
-* the client should ask for the user desired NIP-05.
+* the client asks for the user desired NIP-05.
     * to accomplish this, the client can hardcode using their own backend or they can use NIP-89 to find nsecbunker providers.
     * if using non-trusted (i.e. from NIP-89) the client should validate that the bunker's pubkey `kind:0` has a valid NIP-05 with the `_@domain` identifier.
 * the client generates a local key and stores it in the user's device. **This is the local key the client will use to sign on behalf of the user**
@@ -15,13 +13,7 @@ The way it works is, a new user without a nostr account goes to an client that i
 {
     "content": nip04_encrypt("{
         method: "create_account",
-        params: [
-            {
-                email: "<optional-email-to-identify-the-user>",
-                username: "<desired-username>",
-                domain: "<desired-nip05-domain>" // it should be available in this bunker
-            }
-        ]
+        params: [ "username", "domain", "email" ]
     }")
 }
 ```

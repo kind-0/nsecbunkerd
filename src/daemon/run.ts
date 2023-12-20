@@ -14,7 +14,6 @@ import { decryptNsec } from '../config/keys.js';
 import { requestAuthorization } from './authorize.js';
 import Fastify, { type FastifyInstance } from 'fastify';
 import FastifyFormBody from "@fastify/formbody";
-// import FastifyNextjs from '@fastify/nextjs';
 import FastifyView from '@fastify/view';
 import Handlebars from "handlebars";
 import {authorizeRequestWebHandler, processRequestWebHandler} from "./web/authorize.js";
@@ -93,57 +92,6 @@ function getKeyUsers(config: IConfig) {
     };
 }
 
-// let requestPermissionMutex = false;
-
-// async function requestPermission(keyName: string, remotePubkey: string, method: string, param?: any): Promise<boolean> {
-//     if (requestPermissionMutex) {
-//         console.log(`can't process request ${method} because signer is busy`);
-//         return false;
-//         // setTimeout(() => {
-//         //     requestPermission(keyName, remotePubkey, method, param);
-//         // }, 1000);
-//         // return;
-//     }
-
-//     requestPermissionMutex = true;
-
-//     const npub = nip19.npubEncode(remotePubkey);
-
-//     const promise = new Promise<boolean>((resolve, reject) => {
-//         const question = `👉 Do you want to allow ${npub} to ${method} with key ${keyName}?`;
-
-//         if (method === 'sign_event') {
-//             const e = param.rawEvent();
-
-//             console.log(`👀 Event to be signed\n`, {
-//                 kind: e.kind,
-//                 content: e.content,
-//                 tags: e.tags,
-//             });
-//         }
-
-//         askYNquestion(question, {
-//             timeoutLength: 30000,
-//             yes: () => { resolve(true); },
-//             no: () => { resolve(false); },
-//             timeout: () => { console.log('🚫 Timeout reached, denying request.'); resolve(false); },
-//             always: async () => {
-//                 console.log('✅ Allowing this request and all future requests from this key.');
-//                 await allowAllRequestsFromKey(remotePubkey, keyName, method, param);
-//             },
-//             never: async () => {
-//                 console.log('🚫 Denying this request and all future requests from this key.');
-//                 await rejectAllRequestsFromKey(remotePubkey, keyName);
-//             },
-//             response: () => {
-//                 requestPermissionMutex = false;
-//             }
-//         });
-//     });
-
-//     return promise;
-// }
-
 /**
  * Called by the NDKNip46Backend when an action requires authorization
  * @param keyName -- Key attempting to be used
@@ -153,7 +101,6 @@ function getKeyUsers(config: IConfig) {
 function signingAuthorizationCallback(keyName: string, adminInterface: AdminInterface): Nip46PermitCallback {
     return async (p: Nip46PermitCallbackParams): Promise<boolean> => {
         const { id, method, pubkey: remotePubkey, params: payload } = p;
-        console.trace(`received call with`, {id, remotePubkey, method, payload, p});
         console.log(`🔑 ${keyName} is being requested to ${method} by ${nip19.npubEncode(remotePubkey)}, request ${id}`);
 
         if (!adminInterface.requestPermission) {
@@ -168,14 +115,18 @@ function signingAuthorizationCallback(keyName: string, adminInterface: AdminInte
                 return keyAllowed;
             }
 
-            return await requestAuthorization(
-                adminInterface,
-                keyName,
-                remotePubkey,
-                id,
-                method,
-                payload
-            );
+            return new Promise((resolve) => {
+                requestAuthorization(
+                    adminInterface,
+                    keyName,
+                    remotePubkey,
+                    id,
+                    method,
+                    payload
+                )
+                    .then(() => resolve(true))
+                    .catch(() => resolve(false));
+            });
         } catch(e) {
             console.log('callbackForKey error:', e);
         }
@@ -212,22 +163,16 @@ class Daemon {
         this.ndk = new NDK({
             explicitRelayUrls: config.nostr.relays,
         });
-        this.ndk.pool.on('relay:connect', (r) => {
-            if (r) {
-                console.log(`✅ Connected to ${r.url}`);
-            } else {
-                console.log('✅ Connected to relays', this.ndk.pool.urls);
-            }
-        });
-        this.ndk.pool.on('notice', (n, r) => { console.log(`👀 Notice from ${r.url}`, n); });
+        this.ndk.pool.on('relay:connect', (r) => console.log(`✅ Connected to ${r.url}`) );
+        this.ndk.pool.on('relay:notice', (n, r) => { console.log(`👀 Notice from ${r.url}`, n); });
 
         this.ndk.pool.on('relay:disconnect', (r) => {
             console.log(`🚫 Disconnected from ${r.url}`);
         });
     }
 
-    async start() {
-        await this.ndk.connect(5000);
+    async startWebAuth() {
+        if (!this.config.authPort) return;
 
         this.fastify.register(FastifyView, {
             engine: {
@@ -235,37 +180,37 @@ class Daemon {
             }
         });
 
-        // this.fastify
-            // .register(FastifyNextjs)
-            // .after(() => {
-            //     this.fastify.next('/hello');
-            // });
-
         this.fastify.listen({ port: this.config.authPort });
 
         this.fastify.get('/requests/:id', authorizeRequestWebHandler);
         this.fastify.post('/requests/:id', processRequestWebHandler);
         this.fastify.post('/register/:id', processRegistrationWebHandler);
+    }
 
-        setTimeout(async () => {
-            console.log('🔑 Starting keys', Object.keys(this.config.keys));
-            for (const [name, nsec] of Object.entries(this.config.keys)) {
-                await this.startKey(name, nsec);
+    async startKeys() {
+        console.log('🔑 Starting keys', Object.keys(this.config.keys));
+        for (const [name, nsec] of Object.entries(this.config.keys)) {
+            await this.startKey(name, nsec);
+        }
+
+        // Load unencrypted keys
+        const config = await this.adminInterface.config();
+        for (const [keyName, settings ] of Object.entries(config.keys))  {
+            if (!settings.key) {
+                continue;
             }
 
-            // Load unencrypted keys
-            const config = await this.adminInterface.config();
-            for (const [keyName, settings ] of Object.entries(config.keys))  {
-                if (!settings.key) {
-                    continue;
-                }
+            const nsec = nip19.nsecEncode(settings.key);
+            await this.loadNsec(keyName, nsec);
+        }
+    }
 
-                const nsec = nip19.nsecEncode(settings.key);
-                await this.loadNsec(keyName, nsec);
-            }
+    async start() {
+        await this.ndk.connect(5000);
+        await this.startWebAuth();
+        await this.startKeys();
 
-            console.log('✅ nsecBunker ready to serve requests.');
-        }, 1000);
+        console.log('✅ nsecBunker ready to serve requests.');
     }
 
     /**
@@ -274,7 +219,6 @@ class Daemon {
      * @param nsec NSec of the key
      */
     async startKey(name: string, nsec: string) {
-        console.log(`starting key ${name}`);
         const cb = signingAuthorizationCallback(name, this.adminInterface);
         const hexpk = nip19.decode(nsec).data as string;
         const backend = new Backend(this.ndk, this.fastify, hexpk, cb, this.config.baseUrl);
@@ -294,7 +238,6 @@ class Daemon {
     }
 
     loadNsec(keyName: string, nsec: string) {
-        console.log(`activating key ${keyName}`);
         this.activeKeys[keyName] = nsec;
 
         this.startKey(keyName, nsec);

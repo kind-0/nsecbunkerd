@@ -22,6 +22,7 @@ export type IAdminOpts = {
     npubs: string[];
     adminRelays: string[];
     key: string;
+    notifyAdminsOnBoot?: boolean;
 }
 
 // TODO: Move to configuration
@@ -66,7 +67,11 @@ class AdminInterface {
 
             this.connect();
 
-            this.notifyAdminsOfNewConnection(connectionString);
+            this.config().then((config) => {
+                if (config.admin?.notifyAdminsOnBoot) {
+                    this.notifyAdminsOfNewConnection(connectionString);
+                }
+            });
         });
 
         this.rpc = new NDKNostrRpc(this.ndk, this.ndk.signer!, debug("ndk:rpc"));
@@ -118,7 +123,6 @@ class AdminInterface {
     }
 
     private async handleRequest(req: NDKRpcRequest) {
-        console.log(`request coming in`, req);
         try {
             await this.validateRequest(req);
 
@@ -145,7 +149,7 @@ class AdminInterface {
                     );
             }
         } catch (err: any) {
-            console.error(`Error handling request ${req.method}: ${err.message}`, req.params);
+            console.error(`Error handling request ${req.method}: ${err?.message??err}`, req.params);
             return this.rpc.sendResponse(req.id, req.pubkey, "error", NDKKind.NostrConnectAdmin, err?.message);
         }
     }

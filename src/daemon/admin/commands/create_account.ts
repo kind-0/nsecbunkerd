@@ -39,8 +39,8 @@ async function addNip05(currentConfig: IConfig, username: string, domain: string
     const currentNip05s = await getCurrentNip05File(currentConfig, domain);
     currentNip05s.names[username] = pubkey;
     currentNip05s.relays ??= {};
-    currentNip05s.nip46Relays ??= {};
-    currentNip05s.nip46Relays[username] = currentConfig.nostr.relays;
+    currentNip05s.nip46 ??= {};
+    currentNip05s.nip46[username] = currentConfig.nostr.relays;
 
     // save file
     const nip05File = currentConfig.domains![domain].nip05;

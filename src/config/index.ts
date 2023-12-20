@@ -37,7 +37,8 @@ const defaultConfig: IConfig = {
         adminRelays: [
             "wss://relay.nsecbunker.com"
         ],
-        key: generatedKey.privateKey!
+        key: generatedKey.privateKey!,
+        notifyAdminsOnBoot: true,
     },
     baseUrl: "https://nostr.me",
     database: 'sqlite://nsecbunker.db',
@@ -49,7 +50,13 @@ const defaultConfig: IConfig = {
 async function getCurrentConfig(config: string): Promise<IConfig> {
     try {
         const configFileContents = readFileSync(config, 'utf8');
-        return JSON.parse(configFileContents);
+
+        // add new config options to the config file
+        const currentConfig = JSON.parse(configFileContents);
+        currentConfig.version = version;
+        currentConfig.admin.notifyAdminsOnBoot ??= true;
+
+        return currentConfig;
     } catch (err: any) {
         if (err.code === 'ENOENT') {
             await saveCurrentConfig(config, defaultConfig);
