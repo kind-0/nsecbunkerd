@@ -5,3 +5,4 @@ dist
 **/*.d.ts.map
 nsecbunker.json
 connection.txt
+config
