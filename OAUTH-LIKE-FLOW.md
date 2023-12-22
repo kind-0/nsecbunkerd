@@ -22,7 +22,38 @@ The way it works is, a new user goes to a client that implements this flow, when
     * in this screen the client can issue a `connect` NIP-46 request to the user's pubkey to verify that everything is working.
 
 ## NIP-05
-In the background, the bunker will have configured the requested NIP-05 mapping so that the user can use this nostr address to login next time.
+In the background, the bunker will have configured the requested NIP-05 mapping so that the user can use this nostr address to login next time. Bunkers should add a `nip46` entry to the NIP-05 with a mapping of the name to the relays this bunker will listen on.
+
+```json
+{
+    "names": {
+        "_": "<bunker-pubkey>",
+        "pablo": "fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52",
+    },
+    "relays: {
+        "pablo": [ "wss://nos.lol", "<etc>" ]
+    },
+    "nip46": {
+        "_": [ "wss://relay.nsecbunker.com" ],
+        "pablo": [ "wss://relay.nsecbunker.com" ]
+    }
+}
+```
+
+## NIP-89
+Bunkers supporting user registration can announce themselves using NIP-89's `kind:31990`. Clients SHOULD validate that the 31990 is from a pubkey that owns the root NIP-05 of the domain.
+
+```json
+{
+  "pubkey": "9c1636cda4be9bce36fe06f99f71c21525b109e0f6f206eb7a5f72093ec89f02",
+  "kind": 31990,
+  "tags": [ [ "k", "24133" ] ],
+  "content": "{\"name\":\"Nostr.me\",\"display_name\":\"\",\"nip05\":\"_@nostr.me\",\"picture\":\"\",\"banner\":\"\",\"about\":\"\",\"lud16\":\"\",\"website\":\"https://nostr.me\"}",
+}
+```
+
+The NIP-05 `_@nostr.me` should be verified by the client before using it.
 
 ## NIP-47
 To complete the experience, allowing new users to have a LN wallet immmediately available is very interesting. The bunker can optionally create an LNBits-backed wallet with zapping capabilities.
+
