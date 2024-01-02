@@ -19,8 +19,25 @@ async function nip89announcement(configData: IConfig) {
         const hasNip89 = !!config.nip89;
         if (!hasNip89) continue;
 
+        const signer = new NDKPrivateKeySigner(configData.admin.key);
+        const signerUser = await signer.user();
+
         const profile = config.nip89!.profile;
         const relays = config.nip89!.relays;
+        const nip05 = `_@${domain}`;
+
+        // make sure the nip05 correctly points to this pubkey
+        const uservianip05 = await NDKUser.fromNip05(nip05);
+        if (!uservianip05 || uservianip05.pubkey !== signerUser.pubkey) {
+            console.log(`❌ ${nip05} does not point to this nsecbunker's key`);
+            if (uservianip05) {
+                console.log(`${nip05} points to ${uservianip05.pubkey} instead of ${signerUser.pubkey}`)
+            } else {
+                console.log(`${nip05} needs to point to ${signerUser.pubkey}`)
+            }
+
+            continue
+        }
 
         if (!profile) {
             console.log(`❌ No NIP-89 profile in configuration of ${domain}!`);
@@ -36,7 +53,7 @@ async function nip89announcement(configData: IConfig) {
         const hasNostrdress = !!config.wallet?.lnbits?.nostdressUrl;
 
         const ndk = new NDK({explicitRelayUrls: relays});
-        ndk.signer = new NDKPrivateKeySigner(configData.admin.key);
+        ndk.signer = signer;
         ndk.connect(5000).then(async () => {
             const event = new NDKAppHandlerEvent(ndk, {
                 tags: [
@@ -70,6 +87,7 @@ async function nip89announcement(configData: IConfig) {
                     event.tags.push(["d", NDKKind.NostrConnect.toString()]);
                 }
 
+                profile.nip05 = nip05;
                 event.content = JSON.stringify(profile);
                 event.tags.push(["k", NDKKind.NostrConnect.toString()])
                 if (hasWallet && hasNostrdress) {

@@ -150,7 +150,7 @@ With this configuration users will be able to:
 * get an lnbits-based LN wallet
 * get zapping capabilitiyes through nostdress
 
-For this to work you'll need to run, in addition to `nsecbunkerd`, an lnbits instance and a [nostdress](https://github.com/believethehype/nostdress) instance.
+For this to work you'll need to run, in addition to `nsecbunkerd`, an lnbits instance and a [nostdress](https://github.com/believethehype/nostdress) instance. Your LNBits **needs to have the user manager extension enabled**.
 
 - [ ] TODO: Add NWC support
 
