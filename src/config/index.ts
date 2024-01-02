@@ -18,6 +18,11 @@ export interface IWalletConfig {
 
 export interface DomainConfig {
     nip05: string;
+    nip89?: {
+        profile: Record<string, string>;
+        operator?: string;
+        relays: string[];
+    },
     wallet?: IWalletConfig;
     defaultProfile?: Record<string, string>;
 };

@@ -1,14 +1,87 @@
 import readline from 'readline';
-import { getCurrentConfig, saveCurrentConfig } from '../config/index.js';
+import { DomainConfig, IConfig, getCurrentConfig, saveCurrentConfig } from '../config/index.js';
 import { decryptNsec } from '../config/keys.js';
 import { fork } from 'child_process';
 import { resolve } from 'path';
+import NDK, { NDKAppHandlerEvent, NDKKind, NDKPrivateKeySigner, NDKUser, NostrEvent } from '@nostr-dev-kit/ndk';
+import { debug } from 'console';
 
 interface IOpts {
     keys: string[];
     verbose: boolean;
     config: string;
     adminNpubs: string[];
+}
+
+async function nip89announcement(configData: IConfig) {
+    const domains = configData.domains as Record<string, DomainConfig>;
+    for (const [ domain, config ] of Object.entries(domains)) {
+        const hasNip89 = !!config.nip89;
+        if (!hasNip89) continue;
+
+        const profile = config.nip89!.profile;
+        const relays = config.nip89!.relays;
+
+        if (!profile) {
+            console.log(`❌ No NIP-89 profile in configuration of ${domain}!`);
+            continue
+        }
+
+        if (!relays || relays.length === 0) {
+            console.log(`❌ No relays in NIP-89 configuration of ${domain}!`);
+            continue
+        }
+
+        const hasWallet = !!config.wallet;
+        const hasNostrdress = !!config.wallet?.lnbits?.nostdressUrl;
+
+        const ndk = new NDK({explicitRelayUrls: relays});
+        ndk.signer = new NDKPrivateKeySigner(configData.admin.key);
+        ndk.connect(5000).then(async () => {
+            const event = new NDKAppHandlerEvent(ndk, {
+                tags: [
+                    [ "alt", "This is an nsecBunker announcement" ]
+                ]
+            } as NostrEvent);
+
+            const operator = config.nip89!.operator;
+            if (operator) {
+                try {
+                    const opUser = new NDKUser({npub: operator});
+                    event.tags.push(["p", opUser.pubkey]);
+                } catch {}
+            }
+
+            try {
+                const user = await ndk.signer!.user();
+                const existingEvent = await ndk.fetchEvent({
+                    authors: [user.pubkey],
+                    kinds: [NDKKind.AppHandler],
+                    "#k": [NDKKind.NostrConnect.toString()]
+                });
+
+                if (existingEvent) {
+                    debug(`🔍 Found existing NIP-89 announcement for ${domain}:`, existingEvent.encode());
+                    // update existing event
+                    const dTag = existingEvent.tagValue("d");
+                    event.tags.push(["d", dTag!])
+                } else {
+                    debug(`🔍 No existing NIP-89 announcement for ${domain} found.`);
+                    event.tags.push(["d", NDKKind.NostrConnect.toString()]);
+                }
+
+                event.content = JSON.stringify(profile);
+                event.tags.push(["k", NDKKind.NostrConnect.toString()])
+                if (hasWallet && hasNostrdress) {
+                    // add wallet and zaps feature tags
+                    event.tags.push(["f", "wallet"]);
+                    event.tags.push(["f", "zaps"]);
+                }
+                await event.publish();
+                debug(`✅ Published NIP-89 announcement for ${domain}:`, event.encode());
+            } catch(e: any) { console.log(`❌ Failed to publish NIP-89 announcement for ${domain}!`, e.message); }
+        })
+    }
 }
 
 /**
@@ -23,6 +96,8 @@ export async function start(opts: IOpts) {
     }
 
     await saveCurrentConfig(opts.config, configData);
+
+    nip89announcement(configData);
 
     if (opts.verbose) {
         configData.verbose = opts.verbose;

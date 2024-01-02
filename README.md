@@ -119,6 +119,18 @@ To enable this you'll need to configure a few things on your `nsecbunker.json` c
         "your-domain-here": {
             "nip05": "/your-nip05-nostr.json-file", // The location where NIP-05 entries to your domain are stored
 
+            "nip89": {
+                "profile": { // a kind:0-like profile
+                    "name": "my cool nsecbunker instance", // The name of your nsecBunker instance
+                    "about": "...",
+                },
+                "operator": "npub1l2vyh47mk2p0qlsku7hg0vn29faehy9hy34ygaclpn66ukqp3afqutajft", // (optional) npub of the operator of this nsecbunker
+                "relays": [ // list of relays where to publush the nip89 announcement
+                    "https://relay.damus.io",
+                    "https://pyramid.fiatjaf.com"
+                ]
+            }
+
             // Wallet configuration (optional)
             "wallet": {
                 "lnbits": {
@@ -141,6 +153,18 @@ With this configuration users will be able to:
 For this to work you'll need to run, in addition to `nsecbunkerd`, an lnbits instance and a [nostdress](https://github.com/believethehype/nostdress) instance.
 
 - [ ] TODO: Add NWC support
+
+When booting up, the nsecbunkerd will publish a NIP-89 announcement (`kind:31990`), which is the way clients find out about your nsecbunker.
+
+When a bunker provides a wallet and zapping service (`wallet` and `nostdressUrl` are configured), it will add tags:
+```json
+{
+    "tags": [
+        [ "f", "wallet" ],
+        [ "f", "zaps" ]
+    ]
+}
+```
 
 # Authors
 
