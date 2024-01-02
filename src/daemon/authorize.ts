@@ -32,8 +32,9 @@ export async function requestAuthorization(
         if (baseUrl) {
             // If we have a URL, request authorization through web
             urlAuthFlow(baseUrl, admin, remotePubkey, requestId, request, resolve, reject);
+        } else {
+            adminAuthFlow(admin, keyName, remotePubkey, method, param, resolve, reject);
         }
-        adminAuthFlow(admin, keyName, remotePubkey, method, param, resolve, reject);
     });
 }
 
@@ -41,8 +42,10 @@ async function adminAuthFlow(adminInterface, keyName, remotePubkey, method, para
     const requestedPerm = await adminInterface.requestPermission(keyName, remotePubkey, method, param);
 
     if (requestedPerm) {
+        console.log('resolve adminAuthFlow', !!requestedPerm);
         resolve();
     } else {
+        console.log('reject adminAuthFlow', !!requestedPerm);
         reject();
     }
 }
@@ -54,8 +57,6 @@ async function createRecord(
     method: string,
     param?: string | NDKEvent,
 ) {
-    console.trace('createRecord', { keyName, requestId, remotePubkey, method, param});
-
     let params: string | undefined;
 
     if (param?.rawEvent) {
@@ -114,6 +115,7 @@ export function urlAuthFlow(
             if (record.allowed === false) {
                 reject(record.payload);
             }
+            console.log('resolve urlAuthFlow', !!record.params);
             resolve(record.params);
         }
     }, 100);

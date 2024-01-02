@@ -68,6 +68,7 @@
     <script>
         // If callbackUrl is not provided, close the window
         if (!"{{callbackUrl}}") {
+            window.close();
         } else {
             // If callbackUrl is provided, redirect to it
             window.location.href = "{{callbackUrl}}";

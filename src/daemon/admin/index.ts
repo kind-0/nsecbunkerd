@@ -1,7 +1,7 @@
 import "websocket-polyfill";
-import NDK, { NDKEvent, NDKKind, NDKPrivateKeySigner, NDKRpcRequest, NDKRpcResponse, NDKUser, NostrEvent } from '@nostr-dev-kit/ndk';
+import NDK, { NDKKind, NDKPrivateKeySigner, NDKRpcRequest, NDKRpcResponse, NDKUser } from '@nostr-dev-kit/ndk';
 import { NDKNostrRpc } from '@nostr-dev-kit/ndk';
-import { debug } from 'debug';
+import createDebug from 'debug';
 import { Key, KeyUser } from '../run';
 import { allowAllRequestsFromKey } from '../lib/acl/index.js';
 import prisma from '../../db';
@@ -17,6 +17,8 @@ import fs from 'fs';
 import { validateRequestFromAdmin } from './validations/request-from-admin';
 import { dmUser } from '../../utils/dm-user';
 import { IConfig, getCurrentConfig } from "../../config";
+
+const debug = createDebug("nsecbunker:admin");
 
 export type IAdminOpts = {
     npubs: string[];
@@ -74,7 +76,7 @@ class AdminInterface {
             });
         });
 
-        this.rpc = new NDKNostrRpc(this.ndk, this.ndk.signer!, debug("ndk:rpc"));
+        this.rpc = new NDKNostrRpc(this.ndk, this.ndk.signer!, debug);
     }
 
     public async config(): Promise<IConfig> {
@@ -149,7 +151,7 @@ class AdminInterface {
                     );
             }
         } catch (err: any) {
-            console.error(`Error handling request ${req.method}: ${err?.message??err}`, req.params);
+            debug(`Error handling request ${req.method}: ${err?.message??err}`, req.params);
             return this.rpc.sendResponse(req.id, req.pubkey, "error", NDKKind.NostrConnectAdmin, err?.message);
         }
     }

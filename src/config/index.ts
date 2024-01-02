@@ -1,13 +1,25 @@
 import { readFileSync, writeFileSync } from 'fs';
-import { NDKPrivateKeySigner } from '@nostr-dev-kit/ndk';
+import { NDKPrivateKeySigner, NDKUserProfile } from '@nostr-dev-kit/ndk';
 import { IAdminOpts } from '../daemon/admin';
 
 import { version } from '../../package.json';
 
 const generatedKey = NDKPrivateKeySigner.generate();
 
+export type LNBitsWalletConfig = {
+    url: string,
+    key: string,
+    nostdressUrl: string,
+}
+
+export interface IWalletConfig {
+    lnbits?: LNBitsWalletConfig;
+}
+
 export interface DomainConfig {
     nip05: string;
+    wallet?: IWalletConfig;
+    defaultProfile?: Record<string, string>;
 };
 
 export interface IConfig {

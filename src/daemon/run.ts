@@ -190,6 +190,7 @@ class Daemon {
     async startKeys() {
         console.log('🔑 Starting keys', Object.keys(this.config.keys));
         for (const [name, nsec] of Object.entries(this.config.keys)) {
+            console.log(`🔑 Starting ${name}...`);
             await this.startKey(name, nsec);
         }
 

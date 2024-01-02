@@ -1,17 +1,23 @@
 import NDK, { NDKEvent, NDKPrivateKeySigner, NostrEvent, type NDKUserProfile } from "@nostr-dev-kit/ndk";
 import * as CryptoJS from 'crypto-js';
+import createDebug from "debug";
+
+const debug = createDebug("nsecbunker:profile");
 
 const explicitRelayUrls = [
     'wss://purplepag.es',
     'wss://relay.damus.io',
     'wss://relay.nostr.band',
     'wss://nos.lol',
+    "wss://nostr.mutinywallet.com"
 ];
 
 /**
  * Setup a skeleton profile for a new key since
  * the experience of a completely empty profile
- * is pretty bad when logging in with Coracle
+ * is pretty bad when logging in with Coracle.
+ *
+ * @param email - if provided, will fetch the gravatar
  */
 export async function setupSkeletonProfile(key: NDKPrivateKeySigner, profile?: NDKUserProfile, email?: string) {
     const rand = Math.random().toString(36).substring(7);
@@ -27,9 +33,9 @@ export async function setupSkeletonProfile(key: NDKPrivateKeySigner, profile?: N
             const hash = CryptoJS.MD5(trimmedEmail);
             const shash = hash.toString(CryptoJS.enc.Hex);
             profile.image = `https://robohash.org/${shash}?gravatar=hashed&set=set5`;
-            console.log('fetching gravatar', profile.image);
+            debug('fetching gravatar', profile.image);
         } catch (e) {
-            console.log('error fetching gravatar', e);
+            debug('error fetching gravatar', e);
         }
     }
 
@@ -50,17 +56,18 @@ export async function setupSkeletonProfile(key: NDKPrivateKeySigner, profile?: N
     await event.sign(key);
 
     const t = await event.publish();
-    console.log(t);
+    debug(`Published to ${t.size} relays`);
 
     event = new NDKEvent(ndk, {
         kind: 3,
         tags: [
             ['p', 'fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52'],
+            ['p', user.pubkey],
         ],
         pubkey: user.pubkey,
     } as NostrEvent);
     await event.sign(key);
-    console.log(`trying to publish profile`, event.rawEvent());
+    debug(`follow list event`, event.rawEvent());
     await event.publish();
 
     const relays = new NDKEvent(ndk, {
@@ -69,7 +76,9 @@ export async function setupSkeletonProfile(key: NDKPrivateKeySigner, profile?: N
             ['r', 'wss://purplepag.es'],
             ['r', 'wss://relay.f7z.io'],
             ['r', 'wss://relay.damus.io'],
-            ['r', 'wss://nos.lol'],
+            ['r', 'wss://relayable.org'],
+            ['r', 'wss://relay.nostr.band'],
+            ['r', 'wss://relay.primal.net'],
         ],
         pubkey: user.pubkey,
     } as NostrEvent);

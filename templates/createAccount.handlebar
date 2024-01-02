@@ -8,6 +8,41 @@
     <link rel="preconnect" href="https://rsms.me/" />
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/nostr-tools/lib/nostr.bundle.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.querySelector('form');
+            const email = document.querySelector('input[name="email"]');
+            const password = document.querySelector('input[name="password"]');
+            const confirmPassword = document.querySelector('input[name="confirm_password"]');
+
+            form.addEventListener('submit', function(event) {
+                let valid = true;
+
+                // Check if passwords match and are at least 8 characters long
+                if (password.value !== confirmPassword.value) {
+                    alert("Passwords do not match!");
+                    valid = false;
+                } else if (password.value.length < 8) {
+                    alert("Password must be at least 8 characters long!");
+                    valid = false;
+                }
+
+                // Check if email is valid or empty
+                if (email.value) {
+                    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+                    if (!emailRegex.test(email.value)) {
+                        alert("Please enter a valid email address or leave it empty!");
+                        valid = false;
+                    }
+                }
+
+                if (!valid) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
 
     <style>
         html {
@@ -39,9 +74,15 @@
         </div>
 
         <form action="/register/{{record.id}}" method="POST" class="flex flex-col gap-2">
+            {{#if error}}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{error}}</span>
+                </div>
+            {{/if}}
+
             <label>
                 <span>Recovery Email</span>
-                <input type="email" name="email" value="{{email}}" required class="w-full px-4 py-3 bg-white rounded-lg shadow border border-neutral-200 justify-start items-center gap-2 inline-flex" />
+                <input type="email" name="email" value="{{email}}" class="w-full px-4 py-3 bg-white rounded-lg shadow border border-neutral-200 justify-start items-center gap-2 inline-flex" />
             </label>
 
             <label>

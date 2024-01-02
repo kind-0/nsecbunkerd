@@ -6,7 +6,11 @@ import { IConfig, getCurrentConfig, saveCurrentConfig } from "../../../config";
 import { readFileSync, writeFileSync } from "fs";
 import { allowAllRequestsFromKey } from "../../lib/acl";
 import { requestAuthorization } from "../../authorize";
+import { generateWallet } from "./account/wallet";
 import prisma from "../../../db";
+import createDebug from "debug";
+
+const debug = createDebug("nsecbunker:createAccount");
 
 export async function validate(currentConfig, username: string, domain: string, email?: string) {
     if (!username) {
@@ -26,10 +30,19 @@ export async function validate(currentConfig, username: string, domain: string, 
     }
 }
 
+const emptyNip05File = {
+    names: {},
+    relays: {},
+}
+
 async function getCurrentNip05File(currentConfig: any, domain: string) {
-    const nip05File = currentConfig.domains[domain].nip05;
-    const file = readFileSync(nip05File, 'utf8');
-    return JSON.parse(file);
+    try {
+        const nip05File = currentConfig.domains[domain].nip05;
+        const file = readFileSync(nip05File, 'utf8');
+        return JSON.parse(file);
+    } catch (e: any) {
+        return emptyNip05File;
+    }
 }
 
 /**
@@ -47,10 +60,24 @@ async function addNip05(currentConfig: IConfig, username: string, domain: string
     writeFileSync(nip05File, JSON.stringify(currentNip05s, null, 2));
 }
 
+/**
+ * Reserved usernames that cannot be used since someone might
+ * confuse them with some type of authority of this domain
+ * and scammers are scoundrels
+ */
+const RESERVED_USERNAMES = [
+    "admin", "root", "_", "administrator", "__"
+];
+
 async function validateUsername(username: string | undefined, domain: string, admin: AdminInterface, req: NDKRpcRequest) {
     if (!username || username.length === 0) {
         // create a random username of 10 characters
         username = Math.random().toString(36).substring(2, 15);
+    }
+
+    // check if the username is available
+    if (RESERVED_USERNAMES.includes(username)) {
+        throw new Error('username not available');
     }
 
     return username;
@@ -87,8 +114,7 @@ export default async function createAccount(admin: AdminInterface, req: NDKRpcRe
     const payload: string[] = [ username, domain ];
     if (email) payload.push(email);
 
-    console.log('requesting authorization', payload);
-
+    debug(`Requesting authorization for ${nip05}`);
     const authorizationWithPayload = await requestAuthorization(
         admin,
         nip05,
@@ -97,7 +123,7 @@ export default async function createAccount(admin: AdminInterface, req: NDKRpcRe
         req.method,
         JSON.stringify(payload)
     );
-    console.log('authorizationWithPayload', authorizationWithPayload);
+    debug(`Authorization for ${nip05} ${authorizationWithPayload ? 'granted' : 'denied'}`);
 
     if (authorizationWithPayload) {
         const payload = JSON.parse(authorizationWithPayload);
@@ -108,6 +134,9 @@ export default async function createAccount(admin: AdminInterface, req: NDKRpcRe
     }
 }
 
+/**
+ * This is where the real work of creating the private key, wallet, nip-05, granting access, etc happen
+ */
 export async function createAccountReal(
     admin: AdminInterface,
     req: NDKRpcRequest,
@@ -115,12 +144,14 @@ export async function createAccountReal(
     domain: string,
     email?: string
 ) {
-    // Fetch record since the authorization backend might have changed it
-
-
-    console.log('creating account');
     try {
         const currentConfig = await getCurrentConfig(admin.configFile);
+
+        if (!currentConfig.domains) {
+            throw new Error('no domains configured');
+        }
+
+        const domainConfig = currentConfig.domains[domain];
 
         await validate(currentConfig, username, domain, email);
 
@@ -129,13 +160,38 @@ export async function createAccountReal(
         const profile: NDKUserProfile = {
             display_name: username,
             name: username,
-            nip05
+            nip05,
+            ...(domainConfig.defaultProfile || {})
         };
 
-        setupSkeletonProfile(key, profile, email);
         const generatedUser = await key.user();
 
+        debug(`Created user ${generatedUser.npub} for ${nip05}`);
+
+        // Add NIP-05
         await addNip05(currentConfig, username, domain, generatedUser.pubkey);
+
+        debug(`Added NIP-05 for ${nip05}`);
+
+        // Create wallet
+        if (domainConfig.wallet) {
+            generateWallet(
+                domainConfig.wallet,
+                username, domain, generatedUser.npub
+            ).then((lnaddress) => {
+                debug(`wallet for ${nip05}`, {lnaddress});
+                if (lnaddress) profile.lud16 = lnaddress;
+            }).catch((e) => {
+                debug(`error generating wallet for ${nip05}`, e);
+            }).finally(() => {
+                debug(`saving profile for ${nip05}`, profile);
+                setupSkeletonProfile(key, profile, email);
+            })
+        } else {
+            debug(`no wallet configuration for ${domain}`);
+            // Create user profile
+            setupSkeletonProfile(key, profile, email);
+        }
 
         const keyName = nip05;
         const nsec = nip19.nsecEncode(key.privateKey!);
@@ -148,6 +204,8 @@ export async function createAccountReal(
         await prisma.key.create({ data: { keyName, pubkey: generatedUser.pubkey } });
 
         // Immediately grant access to the creator key
+        // This means that the client creating this account can immediately
+        // access it without having to go through an approval flow
         await grantPermissions(req, keyName);
 
         return admin.rpc.sendResponse(req.id, req.pubkey, generatedUser.pubkey, NDKKind.NostrConnectAdmin);
