@@ -76,7 +76,7 @@ npm run nsecbunkerd -- add --name <your-key-name>
 ```
 
 #### Example
-```
+```bash
 $ npm run nsecbunkerd -- add --name "Uncomfortable family"
 
 nsecBunker uses a passphrase to encrypt your nsec when stored on-disk.
@@ -93,7 +93,7 @@ You will need this to manage users of your keys.
 
 ## Start
 
-```
+```bash
 $ npm run nsecbunkerd start
 ```
 
@@ -101,9 +101,46 @@ $ npm run nsecbunkerd start
 
 nsecbunker ships with a simple client that can request signatures from an nsecbunkerd:
 
-```
+```bash
 nsecbunker-client sign <target-npub> "hi, I'm signing from the command line with my nsecbunkerd!"
 ```
+
+## OAuth-like provider
+
+nsecBunker can run as an OAuth-like provider, which means it will allow new users to create accounts remotely from any compatible client.
+
+To enable this you'll need to configure a few things on your `nsecbunker.json` config file. In addition to the normal configuration:
+
+```json
+{
+    "baseUrl": "https://....", // a public URL where this nsecBunker can be reached via HTTPS
+    "authPort": 3000, // Port number where the OAuth-like provider will listen
+    "domains": {
+        "your-domain-here": {
+            "nip05": "/your-nip05-nostr.json-file", // The location where NIP-05 entries to your domain are stored
+
+            // Wallet configuration (optional)
+            "wallet": {
+                "lnbits": {
+                    "url": "https://legend.lnbits.com", // The URL where your LNbits instance is running
+                    "key": "your-lnbits-admin-key", // The admin key for your LNbits instance
+                    "nostdressUrl": "http://localhost:5556" // The URL where your nostdress instance is running
+                }
+            }
+        }
+    }
+}
+```
+
+With this configuration users will be able to:
+
+* create a new key managed by your nsecbunker
+* get an lnbits-based LN wallet
+* get zapping capabilitiyes through nostdress
+
+For this to work you'll need to run, in addition to `nsecbunkerd`, an lnbits instance and a [nostdress](https://github.com/believethehype/nostdress) instance.
+
+- [ ] TODO: Add NWC support
 
 # Authors
 
@@ -112,4 +149,4 @@ nsecbunker-client sign <target-npub> "hi, I'm signing from the command line with
 
 # License
 
-CC BY-NC-ND 4.0
+MIT
