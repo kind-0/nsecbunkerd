@@ -43,6 +43,18 @@ model Key {
   pubkey    String
 }
 
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  domain    String
+  password  String
+  email     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  deletedAt DateTime?
+  pubkey    String
+}
+
 model SigningCondition {
   id             Int      @id @default(autoincrement())
   method         String?
