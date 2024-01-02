@@ -53,6 +53,8 @@ export async function authorizeRequestWebHandler(request, reply) {
         const method = record.method;
         let nip05: string | undefined;
 
+        debug({callbackUrl})
+
         if (method === "create_account") {
             const [ username, domain, email ] = JSON.parse(record.params!);
             nip05 = `${username}@${domain}`;
@@ -102,6 +104,8 @@ export async function validateRequest(request, record) {
         debug("Provided password didn't match")
         throw new Error("Invalid password");
     }
+
+    return userRecord;
 }
 
 export async function processRequestWebHandler(request, reply) {
@@ -113,8 +117,10 @@ export async function processRequestWebHandler(request, reply) {
         return;
     }
 
+    let userRecord;
+
     try {
-        await validateRequest(request, record);
+        userRecord = await validateRequest(request, record);
     } catch (e: any) {
         reply.status(401);
         reply.type("application/json");
@@ -150,7 +156,7 @@ export async function processRequestWebHandler(request, reply) {
         );
     }
 
-    return { ok: true };
+    return { ok: true, pubkey: userRecord.pubkey };
 }
 
 export async function processRegistrationWebHandler(request, reply) {
