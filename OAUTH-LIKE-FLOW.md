@@ -41,7 +41,7 @@ In the background, the bunker will have configured the requested NIP-05 mapping 
 ```
 
 ## NIP-89
-Bunkers supporting user registration can announce themselves using NIP-89's `kind:31990`. Clients SHOULD validate that the 31990 is from a pubkey that owns the root NIP-05 of the domain.
+Bunkers supporting user registration can announce themselves using NIP-89's `kind:31990`. Clients MUST validate that the 31990 is from a pubkey that owns the root NIP-05 of the domain.
 
 ```json
 {

@@ -85,7 +85,18 @@ function loadPrivateKey(): string | undefined {
         remoteUser = u;
         remotePubkey = remoteUser.pubkey;
     } else {
-        remoteUser = new NDKUser({npub: remotePubkey});
+        // check if we have a @ so we try to get the npub from nip05
+        if (remotePubkey.includes('@')) {
+            const u = await NDKUser.fromNip05(remotePubkey);
+            if (!u) {
+                console.log(`Invalid nip05 ${remotePubkey}`);
+                process.exit(1);
+            }
+            remoteUser = u;
+            remotePubkey = remoteUser.pubkey;
+        } else {
+            remoteUser = new NDKUser({npub: remotePubkey});
+        }
     }
 
     ndk = await createNDK();

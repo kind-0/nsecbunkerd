@@ -19,7 +19,7 @@ export async function validateRegistration(request, record) {
         if (!email.includes("@")) throw new Error("Invalid email address");
 
         // validate email uniqueness (if one was provided)
-        const emailRecord = await prisma.user.findUnique({ where: { email } });
+        const emailRecord = await prisma.user.findFirst({ where: { email } });
         if (emailRecord) throw new Error("Email already exists");
     }
 }
