@@ -36,6 +36,7 @@ RUN npm install --only=production
 # Copy and run migrations
 COPY --from=build /app/prisma ./prisma
 RUN npx prisma migrate deploy
+RUN npx prisma db push
 
 # Set entrypoint
 ENTRYPOINT [ "node", "scripts/start.js" ]

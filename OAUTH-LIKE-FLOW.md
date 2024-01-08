@@ -34,8 +34,8 @@ In the background, the bunker will have configured the requested NIP-05 mapping 
         "pablo": [ "wss://nos.lol", "<etc>" ]
     },
     "nip46": {
-        "_": [ "wss://relay.nsecbunker.com" ],
-        "pablo": [ "wss://relay.nsecbunker.com" ]
+        "bunker-pubkey": [ "wss://relay.nsecbunker.com" ],
+        "fa984bd7dbb282f07e16e7ae87b26a2a7b9b90b7246a44771f0cf5ae58018f52": [ "wss://relay.nsecbunker.com" ]
     }
 }
 ```
