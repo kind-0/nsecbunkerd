@@ -14,5 +14,6 @@ const childProcess = spawn('node', ['./dist/index.js', ...args], {
 });
 
 childProcess.on('exit', (code) => {
+  console.log("Exiting nsecbunkerd with code " + code)
   process.exit(code);
 });

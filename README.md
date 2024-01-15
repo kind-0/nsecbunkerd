@@ -52,7 +52,11 @@ git clone <nsecbunkerd-repo>
 npm i
 npm run build
 npx prisma migrate deploy
+npm start setup
+npm start start
 ```
+
+_and then copy your connection string from the output to [nsecBunker UI](https://app.nsecbunker.com/). Your config is located at `./config/nsecbunker.json`_
 
 ## Configure
 
