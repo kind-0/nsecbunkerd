@@ -111,7 +111,7 @@
               type="email"
               name="email"
               value="{{email}}"
-              class="w-full relative text-sm text-blue-500 dark:text-neutral-200 bg-neutral-200 dark:bg-neutral-750 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 px-3.5 py-2 rounded-lg border-none" />
+              class="w-full relative text-sm text-blue-500 dark:text-blue-500 bg-neutral-200 dark:bg-neutral-800 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 px-3.5 py-2 rounded-lg border-none" />
           </div>
         </label>
 
@@ -128,9 +128,9 @@
               type="text"
               name="username"
               value="{{username}}"
-              class="w-full relative text-sm text-blue-500 dark:text-neutral-200 bg-neutral-200 dark:bg-neutral-750 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 px-3.5 py-2 rounded-lg border-none" />
+              class="w-full relative text-sm text-blue-500 dark:text-blue-500 bg-neutral-200 dark:bg-neutral-800 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 px-3.5 py-2 rounded-lg border-none" />
             <span
-              class="text-gray-500 text-sm absolute right-4 top-1/2 transform -translate-y-1/2">
+              class="text-neutral-500 text-sm absolute right-4 top-1/2 transform -translate-y-1/2">
               @{{domain}}
             </span>
           </div>
