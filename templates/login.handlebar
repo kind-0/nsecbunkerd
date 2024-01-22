@@ -89,7 +89,7 @@
 
         <button
           type="submit"
-          class="px-6 h-9 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 dark:text-neutral-950 font-bold rounded-lg justify-center items-center gap-2 inline-flex text-white font-semibold">
+          class="px-6 h-9 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 dark:text-neutral-950 rounded-lg justify-center items-center gap-2 inline-flex text-white font-semibold">
           Login
         </button>
       </form>
