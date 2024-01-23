@@ -174,13 +174,15 @@ class Daemon {
     async startWebAuth() {
         if (!this.config.authPort) return;
 
-        const prefix = new URL(this.config.baseUrl as string).pathname.replace(/\/+$/, '');
+        const urlPrefix = new URL(this.config.baseUrl as string).pathname.replace(/\/+$/, '');
 
         this.fastify.register(FastifyView, {
             engine: {
-                handlebars: Handlebars
+                handlebars: Handlebars,
             },
-            prefix
+            defaultContext: {
+                urlPrefix 
+            }
         });
 
         this.fastify.listen({ port: this.config.authPort });
