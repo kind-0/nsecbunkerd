@@ -1,4 +1,4 @@
-import NDK, { NDKEvent, NDKNip46Backend, NDKPrivateKeySigner, Nip46PermitCallback, Nip46PermitCallbackParams, NostrEvent } from '@nostr-dev-kit/ndk';
+import NDK, { NDKPrivateKeySigner, Nip46PermitCallback, Nip46PermitCallbackParams } from '@nostr-dev-kit/ndk';
 import { nip19 } from 'nostr-tools';
 import { Backend } from './backend/index.js';
 import {
@@ -174,8 +174,6 @@ class Daemon {
     async startWebAuth() {
         if (!this.config.authPort) return;
 
-        const path = new URL(this.config.baseUrl as string).pathname.replace(/\/+$/, '');
-
         this.fastify.register(FastifyView, {
             engine: {
                 handlebars: Handlebars
@@ -184,9 +182,9 @@ class Daemon {
 
         this.fastify.listen({ port: this.config.authPort });
 
-        this.fastify.get(`${path}/requests/:id`, authorizeRequestWebHandler);
-        this.fastify.post(`${path}/requests/:id`, processRequestWebHandler);
-        this.fastify.post(`${path}/register/:id`, processRegistrationWebHandler);
+        this.fastify.get('/requests/:id', authorizeRequestWebHandler);
+        this.fastify.post('/requests/:id', processRequestWebHandler);
+        this.fastify.post('/register/:id', processRegistrationWebHandler);
     }
 
     async startKeys() {
@@ -204,7 +202,7 @@ class Daemon {
             }
 
             const nsec = nip19.nsecEncode(settings.key);
-            await this.loadNsec(keyName, nsec);
+            this.loadNsec(keyName, nsec);
         }
     }
 
