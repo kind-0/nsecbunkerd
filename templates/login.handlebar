@@ -52,7 +52,7 @@
         </h1>
       </div>
       <form
-        action="{{baseUrl}}/login"
+        action="/login"
         method="POST"
         class="w-full flex flex-col gap-5">
 

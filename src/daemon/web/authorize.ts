@@ -49,8 +49,6 @@ export async function authorizeRequestWebHandler(request, reply) {
         const record = await getAndValidateStateOfRequest(request);
         const url = new URL(request.url, `http://${request.headers.host}`);
         const callbackUrl = url.searchParams.get("callbackUrl");
-        console.log(request)
-        const baseUrl = new URL(request.originalUrl).pathname.replace(/\/+$/, '');
 
         const method = record.method;
         let nip05: string | undefined;
@@ -61,7 +59,7 @@ export async function authorizeRequestWebHandler(request, reply) {
             const [ username, domain, email ] = JSON.parse(record.params!);
             nip05 = `${username}@${domain}`;
 
-            return reply.view("/templates/createAccount.handlebar", { baseUrl, record, email, username, domain, nip05, callbackUrl });
+            return reply.view("/templates/createAccount.handlebar", { record, email, username, domain, nip05, callbackUrl });
         } else {
             const authorized = validateAuthCookie(request);
             return reply.view("/templates/authorizeRequest.handlebar", { record, callbackUrl, authorized });
@@ -165,8 +163,6 @@ export async function processRegistrationWebHandler(request, reply) {
     try {
         const record = await getAndValidateStateOfRequest(request);
         const body = request.body;
-        console.log(request)
-        const baseUrl = new URL(request.originalUrl).pathname.replace(/\/+$/, '');
 
         // we serialize the payload again and store it
         // along with the allowed flag
@@ -183,7 +179,7 @@ export async function processRegistrationWebHandler(request, reply) {
             const [ username, domain, email ] = JSON.parse(record.params!);
             const nip05 = `${username}@${domain}`;
 
-            return reply.view("/templates/createAccount.handlebar", { baseUrl, record, email, username, domain, nip05, error: e.message});
+            return reply.view("/templates/createAccount.handlebar", { record, email, username, domain, nip05, error: e.message});
         }
 
         await prisma.request.update({
