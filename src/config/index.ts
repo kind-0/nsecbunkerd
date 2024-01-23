@@ -62,6 +62,7 @@ const defaultConfig: IConfig = {
     logs: './nsecbunker.log',
     keys: {},
     verbose: false,
+    domains: {}
 };
 
 async function getCurrentConfig(config: string): Promise<IConfig> {
