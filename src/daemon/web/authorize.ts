@@ -165,6 +165,7 @@ export async function processRegistrationWebHandler(request, reply) {
     try {
         const record = await getAndValidateStateOfRequest(request);
         const body = request.body;
+        console.log(request)
         const baseUrl = new URL(request.originalUrl).pathname.replace(/\/+$/, '');
 
         // we serialize the payload again and store it
