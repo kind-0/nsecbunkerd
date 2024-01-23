@@ -77,12 +77,14 @@
         {{/unless}}
 
         <div class="flex flex-col items-center justify-center gap-2 mt-5">
-          <button onclick="sendPostRequest()"
-            class="px-6 h-9 w-full bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 dark:text-neutral-950 rounded-lg justify-center items-center gap-2 inline-flex text-white font-semibold">
+          <button
+            onclick="sendPostRequest()"
+            class="px-6 w-full h-9 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 dark:text-neutral-950 rounded-lg justify-center items-center gap-2 inline-flex text-white text-sm font-semibold">
             Yes
           </button>
-          <button onclick="window.close()"
-            class="px-6 h-9 w-full border border-neutral-300 dark:border-neutral-600 dark:text-neutral-50 rounded-lg justify-center items-center gap-2 inline-flex text-neutral-950 font-semibold">
+          <button
+            onclick="window.close()"
+            class="px-6 h-9 w-full border border-neutral-300 dark:border-neutral-600 dark:text-neutral-50 rounded-lg justify-center items-center gap-2 inline-flex text-neutral-950 text-sm font-semibold">
             No
           </button>
         </div>
