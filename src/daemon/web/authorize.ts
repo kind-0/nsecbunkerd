@@ -163,6 +163,7 @@ export async function processRegistrationWebHandler(request, reply) {
     try {
         const record = await getAndValidateStateOfRequest(request);
         const body = request.body;
+        const baseUrl = new URL(request.url).pathname.split('/')[1];
 
         // we serialize the payload again and store it
         // along with the allowed flag
@@ -179,7 +180,7 @@ export async function processRegistrationWebHandler(request, reply) {
             const [ username, domain, email ] = JSON.parse(record.params!);
             const nip05 = `${username}@${domain}`;
 
-            return reply.view("/templates/createAccount.handlebar", { record, email, username, domain, nip05, error: e.message});
+            return reply.view("/templates/createAccount.handlebar", { baseUrl, record, email, username, domain, nip05, error: e.message});
         }
 
         await prisma.request.update({
