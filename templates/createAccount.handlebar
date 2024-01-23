@@ -87,7 +87,7 @@
         </h1>
       </div>
       <form
-        action="{{baseUrl}}register/{{record.id}}"
+        action="{{baseUrl}}/register/{{record.id}}"
         method="POST"
         class="w-full flex flex-col gap-5">
         {{#if error}}

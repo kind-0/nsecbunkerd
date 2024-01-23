@@ -49,7 +49,7 @@ export async function authorizeRequestWebHandler(request, reply) {
         const record = await getAndValidateStateOfRequest(request);
         const url = new URL(request.url, `http://${request.headers.host}`);
         const callbackUrl = url.searchParams.get("callbackUrl");
-        const baseUrl = new URL(request.url).pathname?.split('/')?.[1] || '/';
+        const baseUrl = new URL(request.url).pathname?.split('/')?.[1]?.replace(/\/+$/, '') || '/';
 
         const method = record.method;
         let nip05: string | undefined;
@@ -164,7 +164,7 @@ export async function processRegistrationWebHandler(request, reply) {
     try {
         const record = await getAndValidateStateOfRequest(request);
         const body = request.body;
-        const baseUrl = new URL(request.url).pathname?.split('/')?.[1] || '/';
+        const baseUrl = new URL(request.url).pathname?.split('/')?.[1]?.replace(/\/+$/, '') || '/';
 
         // we serialize the payload again and store it
         // along with the allowed flag

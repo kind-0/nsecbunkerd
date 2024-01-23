@@ -3,7 +3,7 @@
   <head>
     <meta name="robots" content="noindex">
     <meta charset="UTF-8">
-    <title>Redirect - Nostr</title>
+    <title>Redirect</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <script>
