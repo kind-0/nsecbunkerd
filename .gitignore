@@ -6,3 +6,4 @@ dist
 nsecbunker.json
 connection.txt
 config
+.env

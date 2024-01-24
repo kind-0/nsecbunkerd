@@ -111,6 +111,9 @@ export async function start(opts: IOpts) {
 
     if (opts.adminNpubs && opts.adminNpubs.length > 0) {
         configData.admin.npubs = opts.adminNpubs;
+        console.log(`✅ adminNpubs: ${opts.adminNpubs}`)
+    } else {
+        console.log(`❌ no adminNpubs were provided`)
     }
 
     await saveCurrentConfig(opts.config, configData);

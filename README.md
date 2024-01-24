@@ -1,36 +1,44 @@
 # nsecbunkerd
 Daemon to remotely sign nostr events using keys.
 
-## Easy setup via docker
+## Easy setup via docker compose
 
 To quickly install `nsecbunkerd` via Docker just run:
 
-### Prepare your config directory
-```
+### Configurations
+
+Prepare your config directory
+
+```shell
 mkdir $HOME/.nsecbunker-config
+```
+
+Clone `.env.example` and add your nostr public key to `ADMIN_NPUBS` to the `.env` file.
+
+```shell
+cp .env.example .env
 ```
 
 ### Start nsecbunkerd
 
-```
-docker run -d --name nsecbunkerd -v $HOME/.nsecbunker-config:/app/config pablof7z/nsecbunkerd start --admin <your-npub>
-docker exec -i nsecbunkerd npx prisma db push
-```
+Create and start the project containers. This runs the migrations and then runs nsecbunkderd container.
 
-#### Docker-compose
-Edit `docker-compose.yml` and add your nostrpublic key in `command` directive, like `start --admin npub1nftkhktqglvcsj5n4wetkpzxpy4e5x78wwj9y9p70ar9u5u8wh6qsxmzqs`
+```shell
+# Optionally, build the image locally
+docker compose build nsecbunkerd
 
-And start the container
-```
+# Start the project
+docker compose up
+
+# Or in the background
 docker compose up -d
-docker compose exec nsecbunker npx prisma db push
 ```
 
 
 ### Get the connection string
 
-```
-docker exec nsecbunkerd cat /app/connection.txt
+```shell
+docker compose exec nsecbunkerd cat /app/connection.txt
 ```
 
 nsecBunker will give you a connection string like:
@@ -47,7 +55,7 @@ to find the options to add and approve keys from the CLI.
 
 Node.js v18 or newer is required.
 
-```
+```shell
 git clone <nsecbunkerd-repo>
 npm i
 npm run build
@@ -71,11 +79,12 @@ Note that ONLY the npub that you designated as an administrator when launching n
 Here you'll give nsecBunker your nsec. It will ask you for a passphrase to encrypt it on-disk.
 The name is an internal name you'll use to refer to this keypair. Choose anything that is useful to you.
 
-```
+```shell
 npm run nsecbunkerd -- add --name <your-key-name>
 ```
 
 #### Example
+
 ```bash
 $ npm run nsecbunkerd -- add --name "Uncomfortable family"
 
