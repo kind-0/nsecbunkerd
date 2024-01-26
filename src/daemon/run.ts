@@ -185,7 +185,7 @@ class Daemon {
             }
         });
 
-        this.fastify.listen({ port: this.config.authPort });
+        this.fastify.listen({ port: this.config.authPort, host: this.config.authHost });
 
         this.fastify.get('/requests/:id', authorizeRequestWebHandler);
         this.fastify.post('/requests/:id', processRequestWebHandler);

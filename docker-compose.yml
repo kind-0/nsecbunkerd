@@ -11,7 +11,7 @@ services:
     volumes:
       - $HOME/.nsecbunker-config:/app/config
     env_file:
-      - .env.example
+      - .env
     ports:
       - "3000:3000"
     depends_on:
@@ -22,7 +22,7 @@ services:
     volumes:
       - $HOME/.nsecbunker-config:/app/config
     env_file:
-      - .env.example
+      - .env
     restart: no
     entrypoint: ""
     command:
