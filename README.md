@@ -7,13 +7,15 @@ To quickly install `nsecbunkerd` via Docker just run:
 
 ### Configurations
 
-Prepare your config directory
+- Prepare your config directory
+  
+  ```shell
+  mkdir $HOME/.nsecbunker-config
+  ```
 
-```shell
-mkdir $HOME/.nsecbunker-config
-```
+- Clone `.env.example` and add your nostr public key to `ADMIN_NPUBS` to the `.env` file.
 
-Clone `.env.example` and add your nostr public key to `ADMIN_NPUBS` to the `.env` file.
+- Change `DATABASE_URL` if necessary.
 
 ```shell
 cp .env.example .env
