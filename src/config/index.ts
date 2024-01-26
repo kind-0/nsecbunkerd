@@ -33,6 +33,7 @@ export interface IConfig {
     };
     admin: IAdminOpts;
     authPort?: number;
+    authHost?: string;
     database: string;
     logs: string;
     keys: Record<string, any>;
@@ -49,6 +50,7 @@ const defaultConfig: IConfig = {
         ]
     },
     authPort: 3000,
+    authHost: 'localhost',
     admin: {
         npubs: [],
         adminRelays: [
