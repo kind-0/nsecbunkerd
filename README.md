@@ -40,7 +40,7 @@ docker compose up -d
 ### Get the connection string
 
 ```shell
-docker compose exec nsecbunkerd cat /app/connection.txt
+docker compose exec nsecbunkerd cat /app/config/connection.txt
 ```
 
 nsecBunker will give you a connection string like:

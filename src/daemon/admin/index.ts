@@ -17,6 +17,8 @@ import fs from 'fs';
 import { validateRequestFromAdmin } from './validations/request-from-admin';
 import { dmUser } from '../../utils/dm-user';
 import { IConfig, getCurrentConfig } from "../../config";
+import path from 'path';
+
 
 const debug = createDebug("nsecbunker:admin");
 
@@ -63,7 +65,8 @@ class AdminInterface {
             console.log(`\n\nnsecBunker connection string:\n\n${connectionString}\n\n`);
 
             // write connection string to connection.txt
-            fs.writeFileSync('connection.txt', connectionString);
+            const configFolder = path.dirname(configFile)
+            fs.writeFileSync(path.join(configFolder, 'connection.txt'), connectionString);
 
             this.signerUser = user;
 
