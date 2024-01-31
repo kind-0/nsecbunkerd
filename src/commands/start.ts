@@ -110,8 +110,6 @@ async function nip89announcement(configData: IConfig) {
 export async function start(opts: IOpts) {
     const configData = await getCurrentConfig(opts.config);
 
-    console.log(opts)
-
     if (opts.adminNpubs && opts.adminNpubs.length > 0) {
         configData.admin.npubs = opts.adminNpubs;
         console.log(`✅ adminNpubs: ${opts.adminNpubs}`)

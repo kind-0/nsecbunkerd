@@ -2,6 +2,7 @@ import "websocket-polyfill";
 import NDK, { NDKUser, NDKEvent, NDKPrivateKeySigner, NDKNip46Signer, NostrEvent } from '@nostr-dev-kit/ndk';
 import fs from 'fs';
 
+const args = process.argv;
 const command = process.argv[2];
 let remotePubkey = process.argv[3];
 let content = process.argv[4];
@@ -11,6 +12,13 @@ let signer: NDKNip46Signer;
 let ndk: NDK;
 let remoteUser: NDKUser;
 
+const relaysIndex = args.findIndex(arg => arg === '--relays');
+let relays: string[] = [];
+
+if (relaysIndex !== -1 && args[relaysIndex + 1]) {
+    relays = args[relaysIndex + 1].split(',');
+}
+
 if (!command) {
     console.log('Usage: node src/client.js <command> <remote-npub> <content> [--dont-publish] [--debug] [--pk <key>]');
     console.log('');
@@ -19,16 +27,19 @@ if (!command) {
     console.log(`\t<content>:          sign flow: event JSON to sign (no need for pubkey or id fields) | or kind:1 content string to sign\n`);
     console.log(`\t                    create_account flow: [desired-nip05[,desired-domain,[email]]]`);
     console.log('\t--debug:            enable debug mode');
+    console.log('\t--relays:           list of relays to publish to (separated by commas)');
     process.exit(1);
 }
 
 async function createNDK(): Promise<NDK> {
     const ndk = new NDK({
-        explicitRelayUrls: ['wss://relay.nsecbunker.com'],
+        explicitRelayUrls: [
+		'wss://relay.nsecbunker.com',
+		...relays
+	],
         enableOutboxModel: false
     });
     if (debug) {
-        ndk.pool.on('relay:connect', () => console.log('✅ connected'));
         ndk.pool.on('relay:disconnect', () => console.log('❌ disconnected'));
     }
     await ndk.connect(5000);
@@ -176,6 +187,10 @@ function signFlow() {
             } else {
                 console.log(event.sig);
             }
+
+	    if (!dontPublish) {
+            const relaysPublished = await event.publish();
+	    }
 
             process.exit(0);
         } catch(e) {
