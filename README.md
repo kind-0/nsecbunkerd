@@ -8,7 +8,7 @@ To quickly install `nsecbunkerd` via Docker just run:
 ### Configurations
 
 - Prepare your config directory
-  
+
   ```shell
   mkdir $HOME/.nsecbunker-config
   ```
@@ -105,7 +105,7 @@ You will need this to manage users of your keys.
 ## Start
 
 ```bash
-$ npm run nsecbunkerd start
+$ npm run lfg --admin <your-admin-npub>
 ```
 
 ## Testing with `nsecbunker-client`

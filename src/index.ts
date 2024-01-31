@@ -65,14 +65,5 @@ const argv = yargs(hideBin(process.argv))
             default: 'config/nsecbunker.json',
         },
     })
+    .demandCommand(0, 1)
     .parse();
-
-// Check if a command is provided, if not, default to 'start'
-if (!argv._[0]) {
-    start({
-        keys: [],
-        verbose: false,
-        config: argv.config as string,
-        adminNpubs: adminNpubs
-    });
-}
