@@ -1,8 +1,12 @@
 const { execSync, spawn } = require('child_process');
+const fs = require('fs');
 
 try {
 	console.log(`Running migrations`);
-  execSync(`mkdir config`);
+  // check if config folder exists
+  if (!fs.existsSync('./config')) {
+    execSync(`mkdir config`);
+  }
   execSync('npm run prisma:migrate');
 } catch (error) {
 	console.log(error);
