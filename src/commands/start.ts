@@ -15,6 +15,7 @@ interface IOpts {
 
 async function nip89announcement(configData: IConfig) {
     const domains = configData.domains as Record<string, DomainConfig>;
+    if (!domains) return;
     for (const [ domain, config ] of Object.entries(domains)) {
         const hasNip89 = !!config.nip89;
         if (!hasNip89) continue;
@@ -108,6 +109,8 @@ async function nip89announcement(configData: IConfig) {
  */
 export async function start(opts: IOpts) {
     const configData = await getCurrentConfig(opts.config);
+
+    console.log(opts)
 
     if (opts.adminNpubs && opts.adminNpubs.length > 0) {
         configData.admin.npubs = opts.adminNpubs;
