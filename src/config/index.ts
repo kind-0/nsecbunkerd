@@ -49,8 +49,6 @@ const defaultConfig: IConfig = {
             "wss://relay.nsecbunker.com"
         ]
     },
-    authPort: 3000,
-    authHost: 'localhost',
     admin: {
         npubs: [],
         adminRelays: [
@@ -59,12 +57,10 @@ const defaultConfig: IConfig = {
         key: generatedKey.privateKey!,
         notifyAdminsOnBoot: true,
     },
-    baseUrl: "https://nostr.me",
     database: 'sqlite://nsecbunker.db',
     logs: './nsecbunker.log',
     keys: {},
     verbose: false,
-    domains: {}
 };
 
 async function getCurrentConfig(config: string): Promise<IConfig> {
