@@ -2,6 +2,7 @@ const { execSync, spawn } = require('child_process');
 
 try {
 	console.log(`Running migrations`);
+  execSync(`mkdir config`);
   execSync('npm run prisma:migrate');
 } catch (error) {
 	console.log(error);
