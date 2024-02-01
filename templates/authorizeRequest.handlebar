@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta name="robots" content="noindex">
-    <meta charset="UTF-8">
+    <meta name="robots" content="noindex" />
+    <meta charset="UTF-8" />
     <title>Authorize Request</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
@@ -31,10 +31,56 @@
           }
         }
       }
+
+      function sendPostRequest(permissions) {
+        const url = '/requests/{{record.id}}';
+        const password = document.getElementById('password').value;
+        let callbackUrl;
+        {{#if callbackUrl}}
+        callbackUrl = '{{callbackUrl}}';
+        {{/if}}
+        const data = {
+            permissions,
+            password,
+        };
+
+        fetch(url, {
+            method: 'POST', // or 'PUT'
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            console.log('Success:', data);
+
+            if (data.error) {
+                document.getElementById('error').innerText = data.error;
+                document.getElementById('error').classList.remove('hidden');
+                return;
+            }
+
+            // hide main content and show close message
+            document.getElementById('main').classList.add('hidden');
+            document.getElementById('closeit').classList.remove('hidden');
+
+            // redirect to callback url
+            if (callbackUrl) {
+                const url = new URL(callbackUrl);
+                url.searchParams.append('pubkey', data.pubkey);
+                window.location.href = url.toString();
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+      };
     </script>
     <style>
       body {
-        font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif,
+          "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
       }
 
       .border {
@@ -43,34 +89,41 @@
     </style>
   </head>
   <body
-    class="flex flex-col justify-center items-center min-h-screen bg-gray-100 dark:bg-neutral-800 text-neutrla-950 dark:text-neutral-50">
+    class="flex flex-col justify-center items-center min-h-screen bg-gray-100 dark:bg-neutral-800 text-neutrla-950 dark:text-neutral-50"
+  >
     <div class="max-w-md mx-auto w-full px-2 md:px-4 lg:px-8">
       <div id="main">
         <h1
-          class="text-neutral-950 dark:text-neutral-50 text-lg font-semibold w-full">
+          class="text-neutral-950 dark:text-neutral-50 text-lg font-semibold w-full"
+        >
           Do you want to allow this client to use account
           <br />
-          <span class="text-blue-500">{{record.keyName}}</span>?
+          <span class="text-blue-500">{{ record.keyName }}</span
+          >?
         </h1>
 
-        <div id="error"
-          class="flex flex-col gap-4 bg-red-200 rounded-lg p-4 w-full hidden">
-        </div>
+        <div
+          id="error"
+          class="flex flex-col gap-4 bg-red-200 rounded-lg p-4 w-full hidden"
+        ></div>
 
         {{#unless authenticated}}
         <div class="flex flex-col gap-4 mt-10">
           <label class="flex flex-col gap-2">
             <span
-              class="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+              class="text-sm font-medium text-neutral-800 dark:text-neutral-200"
+            >
               Enter your password to authenticate this request
             </span>
             <div
-              class="relative before:pointer-events-none focus-within:before:opacity-100 before:opacity-0 before:absolute before:-inset-1 before:rounded-[11px] before:border before:border-blue-500 before:ring-2 before:ring-blue-500/20 before:transition after:pointer-events-none after:absolute after:inset-px after:rounded-[7px] after:shadow-highlight dark:after:shadow-white/5 dark:focus-within:after:shadow-blue-500/20 after:transition">
+              class="relative before:pointer-events-none focus-within:before:opacity-100 before:opacity-0 before:absolute before:-inset-1 before:rounded-[11px] before:border before:border-blue-500 before:ring-2 before:ring-blue-500/20 before:transition after:pointer-events-none after:absolute after:inset-px after:rounded-[7px] after:shadow-highlight dark:after:shadow-white/5 dark:focus-within:after:shadow-blue-500/20 after:transition"
+            >
               <input
                 type="password"
                 name="password"
                 required
-                class="w-full relative text-sm text-neutral-800 dark:text-neutral-200 bg-white dark:bg-neutral-750 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 px-3.5 py-2 rounded-lg border border-black/5 shadow-input shadow-black/5 dark:shadow-black/10 !outline-none" />
+                class="w-full relative text-sm text-neutral-800 dark:text-neutral-200 bg-white dark:bg-neutral-750 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 px-3.5 py-2 rounded-lg border border-black/5 shadow-input shadow-black/5 dark:shadow-black/10 !outline-none"
+              />
             </div>
           </label>
         </div>
@@ -79,12 +132,14 @@
         <div class="flex flex-col items-center justify-center gap-2 mt-5">
           <button
             onclick="sendPostRequest()"
-            class="px-6 w-full h-9 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 dark:text-neutral-950 rounded-lg justify-center items-center gap-2 inline-flex text-white text-sm font-semibold">
+            class="px-6 w-full h-9 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 dark:text-neutral-950 rounded-lg justify-center items-center gap-2 inline-flex text-white text-sm font-semibold"
+          >
             Yes
           </button>
           <button
             onclick="window.close()"
-            class="px-6 h-9 w-full border border-neutral-300 dark:border-neutral-600 dark:text-neutral-50 rounded-lg justify-center items-center gap-2 inline-flex text-neutral-950 text-sm font-semibold">
+            class="px-6 h-9 w-full border border-neutral-300 dark:border-neutral-600 dark:text-neutral-50 rounded-lg justify-center items-center gap-2 inline-flex text-neutral-950 text-sm font-semibold"
+          >
             No
           </button>
         </div>
@@ -101,7 +156,7 @@
 
     <!-- List all cookies -->
     <script>
-      const cookies = document.cookie.split(';');
+      const cookies = document.cookie.split(";");
       for (let i = 0; i < cookies.length; i++) {
         console.log(cookies[i]);
       }
