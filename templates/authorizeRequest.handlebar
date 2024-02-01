@@ -121,6 +121,7 @@
               <input
                 type="password"
                 name="password"
+                id="password"
                 required
                 class="w-full relative text-sm text-neutral-800 dark:text-neutral-200 bg-white dark:bg-neutral-750 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 px-3.5 py-2 rounded-lg border border-black/5 shadow-input shadow-black/5 dark:shadow-black/10 !outline-none"
               />
