@@ -36,7 +36,6 @@
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const form = document.querySelector('form');
-        const email = document.querySelector('input[name="email"]');
         const password = document.querySelector('input[name="password"]');
         const confirmPassword = document.querySelector('input[name="confirm_password"]');
 
@@ -50,15 +49,6 @@
           } else if (password.value.length < 8) {
             alert("Password must be at least 8 characters long!");
             valid = false;
-          }
-
-          // Check if email is valid or empty
-          if (email.value) {
-            const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-            if (!emailRegex.test(email.value)) {
-              alert("Please enter a valid email address or leave it empty!");
-              valid = false;
-            }
           }
 
           if (!valid) {
@@ -98,21 +88,7 @@
         </div>
         {{/if}}
 
-        <label class="flex flex-col gap-2">
-          <span
-            class="text-sm font-medium text-neutral-800 dark:text-neutral-200">
-            Recovery Email
-          </span>
-          <div
-            class="relative before:pointer-events-none focus-within:before:opacity-100 before:opacity-0 before:absolute before:-inset-1 before:rounded-[11px] before:border before:border-blue-500 before:ring-2 before:ring-blue-500/20 before:transition after:pointer-events-none after:absolute after:inset-px after:rounded-[7px] after:shadow-highlight dark:after:shadow-white/5 dark:focus-within:after:shadow-blue-500/20 after:transition">
-            <input
-              readonly="true"
-              type="email"
-              name="email"
-              value="{{email}}"
-              class="w-full relative text-sm text-blue-500 dark:text-blue-500 bg-neutral-200 dark:bg-neutral-800 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 px-3.5 py-2 rounded-lg border-none" />
-          </div>
-        </label>
+        <input type="hidden" name="email" value="" />
 
         <label class="flex flex-col gap-2">
           <span
