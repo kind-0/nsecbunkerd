@@ -145,12 +145,13 @@ class AdminInterface {
                 case 'get_policies': await this.reqListPolicies(req); break;
                 case 'create_new_token': await createNewToken(this, req); break;
                 default:
+                    const originalKind = req.event.kind!;
                     console.log(`Unknown method ${req.method}`);
                     return this.rpc.sendResponse(
                         req.id,
                         req.pubkey,
                         JSON.stringify(['error', `Unknown method ${req.method}`]),
-                        24134
+                        originalKind
                     );
             }
         } catch (err: any) {
