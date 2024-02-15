@@ -106,7 +106,8 @@ export default async function createAccount(admin: AdminInterface, req: NDKRpcRe
         domain = await validateDomain(domain, admin, req);
         username = await validateUsername(username, domain, admin, req);
     } catch (e: any) {
-        admin.rpc.sendResponse(req.id, req.pubkey, "error", NDKKind.NostrConnectAdmin, e.message);
+        const originalKind = req.event.kind!;
+        admin.rpc.sendResponse(req.id, req.pubkey, "error", originalKind, e.message);
         return;
     }
 
