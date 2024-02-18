@@ -98,7 +98,6 @@
           <div
             class="relative before:pointer-events-none focus-within:before:opacity-100 before:opacity-0 before:absolute before:-inset-1 before:rounded-[11px] before:border before:border-blue-500 before:ring-2 before:ring-blue-500/20 before:transition after:pointer-events-none after:absolute after:inset-px after:rounded-[7px] after:shadow-highlight dark:after:shadow-white/5 dark:focus-within:after:shadow-blue-500/20 after:transition">
             <input
-              readonly="true"
               type="text"
               name="username"
               value="{{username}}"
