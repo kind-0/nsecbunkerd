@@ -1,32 +1,33 @@
 version: "3.3"
 
 services:
-  nsecbunkerd:
-    image: pablof7z/nsecbunkerd
-    build: .
-    restart: unless-stopped
-    pids_limit: 100
-    mem_limit: 256mb
-    memswap_limit: 256mb
-    volumes:
-      - $HOME/.nsecbunker-config:/app/config
-    env_file:
-      - .env
-    ports:
-      - "3000:3000"
-    depends_on:
-      - migrations
+    nsecbunkerd:
+        image: pablof7z/nsecbunkerd
+        build: .
+        restart: unless-stopped
+        pids_limit: 100
+        mem_limit: 256mb
+        memswap_limit: 256mb
+        volumes:
+            - $HOME/.nsecbunker-config:/app/config
+            - $HOME/nip05:/app/nip05
+        env_file:
+            - .env
+        ports:
+            - "3005:3000"
+        depends_on:
+            - migrations
 
-  migrations:
-    image: pablof7z/nsecbunkerd
-    volumes:
-      - $HOME/.nsecbunker-config:/app/config
-    env_file:
-      - .env
-    restart: no
-    entrypoint: ""
-    command:
-      - npx
-      - prisma
-      - migrate
-      - deploy
+    migrations:
+        image: pablof7z/nsecbunkerd
+        volumes:
+            - $HOME/.nsecbunker-config:/app/config
+        env_file:
+            - .env
+        restart: "no"
+        entrypoint: ""
+        command:
+            - npx
+            - prisma
+            - migrate
+            - deploy
