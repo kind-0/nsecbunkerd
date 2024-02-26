@@ -82,6 +82,7 @@ Here you'll give nsecBunker your nsec. It will ask you for a passphrase to encry
 The name is an internal name you'll use to refer to this keypair. Choose anything that is useful to you.
 
 ```shell
+mkdir config
 npm run nsecbunkerd -- add --name <your-key-name>
 ```
 
