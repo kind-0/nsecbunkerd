@@ -25,12 +25,25 @@ export async function requestAuthorization(
     if (baseUrl === undefined) {
         const config = await admin.config();
         baseUrl = config.baseUrl;
-        console.log('baseUrl', baseUrl);
+    }
+
+    let userRecord: any
+
+    if(keyName) {
+        const [username, domain] = keyName.split("@");
+
+        if (!username || !domain) {
+            return
+        }
+
+        userRecord = await prisma.user.findUnique({
+            where: { username, domain }
+        });
     }
 
     return new Promise<string>((resolve, reject) => {
-        if (baseUrl) {
-            // If we have a URL, request authorization through web
+        if (baseUrl && (userRecord || method === "create_account")) {
+            // If we have a URL and user record, request authorization through web
             urlAuthFlow(baseUrl, admin, remotePubkey, requestId, request, resolve, reject);
         } else {
             adminAuthFlow(admin, keyName, remotePubkey, method, param, resolve, reject);
