@@ -1,6 +1,6 @@
 {
   "name": "nsecbunkerd",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "nsecbunker daemon",
   "main": "dist/index.js",
   "bin": {
@@ -39,7 +39,7 @@
     "@fastify/view": "^8.2.0",
     "@inquirer/password": "^1.1.2",
     "@inquirer/prompts": "^1.2.3",
-    "@nostr-dev-kit/ndk": "^2.4.2",
+    "@nostr-dev-kit/ndk": "^2.5.1",
     "@prisma/client": "^5.4.1",
     "@scure/base": "^1.1.1",
     "@types/yargs": "^17.0.24",
