@@ -76,6 +76,8 @@ function loadPrivateKey(): string | undefined {
 (async () => {
     let remoteUser: NDKUser;
 
+    ndk = await createNDK();
+
     // if this is the create_account command and we have something that doesn't look like an npub as the remotePubkey, use NDKUser.fromNip05 to get the npub
     if (command === 'create_account' && !remotePubkey.startsWith("npub")) {
         // see if we have a username@domain
@@ -88,7 +90,7 @@ function loadPrivateKey(): string | undefined {
 
         content = `${username},${domain}`
 
-        const u = await NDKUser.fromNip05(domain);
+        const u = await NDKUser.fromNip05(domain, ndk);
         if (!u) {
             console.log(`Invalid nip05 ${remotePubkey}`);
             process.exit(1);
@@ -110,7 +112,7 @@ function loadPrivateKey(): string | undefined {
         }
     }
 
-    ndk = await createNDK();
+    
     let localSigner: NDKPrivateKeySigner;
 
     const pk = loadPrivateKey();

@@ -27,8 +27,10 @@ async function nip89announcement(configData: IConfig) {
         const relays = config.nip89!.relays;
         const nip05 = `_@${domain}`;
 
+        const ndk = new NDK({explicitRelayUrls: relays});
+
         // make sure the nip05 correctly points to this pubkey
-        const uservianip05 = await NDKUser.fromNip05(nip05);
+        const uservianip05 = await NDKUser.fromNip05(nip05, ndk);
         if (!uservianip05 || uservianip05.pubkey !== signerUser.pubkey) {
             console.log(`❌ ${nip05} does not point to this nsecbunker's key`);
             if (uservianip05) {
@@ -53,7 +55,6 @@ async function nip89announcement(configData: IConfig) {
         const hasWallet = !!config.wallet;
         const hasNostrdress = !!config.wallet?.lnbits?.nostdressUrl;
 
-        const ndk = new NDK({explicitRelayUrls: relays});
         ndk.signer = signer;
         ndk.connect(5000).then(async () => {
             const event = new NDKAppHandlerEvent(ndk, {
