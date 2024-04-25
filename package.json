@@ -1,6 +1,6 @@
 {
   "name": "nsecbunkerd",
-  "version": "0.10.4",
+  "version": "0.10.5",
   "description": "nsecbunker daemon",
   "main": "dist/index.js",
   "bin": {
