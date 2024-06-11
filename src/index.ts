@@ -9,7 +9,8 @@ import { start } from './commands/start.js';
 
 const adminNpubs = process.env.ADMIN_NPUBS ? process.env.ADMIN_NPUBS.split(',') : [];
 
-const argv = yargs(hideBin(process.argv))
+
+yargs(hideBin(process.argv))
     .command('setup', 'Setup nsecBunker', {}, (argv) => {
         setup(argv.config as string);
     })
@@ -65,5 +66,5 @@ const argv = yargs(hideBin(process.argv))
             default: 'config/nsecbunker.json',
         },
     })
-    .demandCommand(0, 1)
+    .demandCommand(1, 1, "Please provide exactly one argument (e.g. setup, start, add)")
     .parse();

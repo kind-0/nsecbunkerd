@@ -1,3 +1,4 @@
+globalThis.crypto = require('crypto');
 import "websocket-polyfill";
 import run from './run';
 import type {IConfig} from '../config/index';
