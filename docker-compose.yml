@@ -23,7 +23,7 @@ services:
       - $HOME/.nsecbunker-config:/app/config
     env_file:
       - .env
-    restart: no
+    restart: "no"
     entrypoint: ""
     command:
       - npx
